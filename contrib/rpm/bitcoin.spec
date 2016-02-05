@@ -245,7 +245,7 @@ done
 # qt icons
 install -D -p src/qt/res/rendered_icons/bitcoin.ico %{buildroot}%{_datadir}/pixmaps/bitcoin.ico
 install -p share/pixmaps/nsis-header.bmp %{buildroot}%{_datadir}/pixmaps/
-install -p share/pixmaps/nsis-wizard.bmp %{buildroot}%{_datadir}/pixmaps/
+install -p src/qt/res/rendered_icons/nsis-wizard.bmp %{buildroot}%{_datadir}/pixmaps/
 install -p %{SOURCE100} %{buildroot}%{_datadir}/pixmaps/bitcoin.svg
 %{_bindir}/inkscape %{SOURCE100} --export-png=%{buildroot}%{_datadir}/pixmaps/bitcoin16.png -w16 -h16
 %{_bindir}/inkscape %{SOURCE100} --export-png=%{buildroot}%{_datadir}/pixmaps/bitcoin32.png -w32 -h32
