@@ -27,6 +27,8 @@
 #include <utility>
 #include <vector>
 
+#include <boost/optional.hpp>
+
 #include <atomic>
 
 #include <boost/unordered_map.hpp>
@@ -541,6 +543,9 @@ void UpdateUncommittedBlockStructures(CBlock& block, const CBlockIndex* pindexPr
 
 /** Produce the necessary coinbase commitment for a block (modifies the hash, don't call for mined blocks). */
 std::vector<unsigned char> GenerateCoinbaseCommitment(CBlock& block, const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams);
+
+/** Extract pak commitment from coinbase, if it exists. List must be ordered, but not necessarily consecutive in output index */
+boost::optional<CPAKList> GetPAKKeysFromCommitment(const CTransaction& coinbase);
 
 /** Calculates script necessary for p2ch peg-in transactions */
 CScript calculate_contract(const CScript& federationRedeemScript, const CScript& witnessProgram);
