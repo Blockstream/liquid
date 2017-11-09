@@ -11,6 +11,7 @@
 #include "tinyformat.h"
 #include "util.h"
 #include "utilstrencodings.h"
+#include "chainparams.h"
 
 #include <boost/foreach.hpp>
 
@@ -48,14 +49,17 @@ bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType, const bool w
             return false;
         if (m < 1 || m > n)
             return false;
+    // No special OP_RETURN limits, we are using them for peg-out template
     } else if (whichType == TX_NULL_DATA &&
-               (!fAcceptDatacarrier || scriptPubKey.size() > nMaxDatacarrierBytes))
+               (GetBoolArg("-validatepegout", DEFAULT_VALIDATE_PEGOUT) &&
+                scriptPubKey.IsPegoutScript(Params().ParentGenesisBlockHash()) &&
+                !scriptPubKey.HasValidWhitelistPegoutProof(Params().ParentGenesisBlockHash()))) {
           return false;
-    else if (whichType == TX_TRUE)
+    } else if (whichType == TX_TRUE) {
         return false;
-
-    else if (!witnessEnabled && (whichType == TX_WITNESS_V0_KEYHASH || whichType == TX_WITNESS_V0_SCRIPTHASH))
+    } else if (!witnessEnabled && (whichType == TX_WITNESS_V0_KEYHASH || whichType == TX_WITNESS_V0_SCRIPTHASH)) {
         return false;
+    }
 
     return whichType != TX_NONSTANDARD;
 }
