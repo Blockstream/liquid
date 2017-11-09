@@ -514,6 +514,7 @@ std::string HelpMessage(HelpMessageMode mode)
             " " + _("This creates a new chain with a different genesis block."));
         strUsage += HelpMessageOpt("-peginconfirmationdepth", strprintf(_("Pegin claims must be this deep to be considered valid. (default: %d)"), DEFAULT_PEGIN_CONFIRMATION_DEPTH));
     }
+    strUsage += HelpMessageOpt("-validatepegout", strprintf(_("Do mempool validation of pegout proofs included in transactions using PAK list included in block commitments and pack list. (default: %u) This is only for anti-footgun measures only, and does not effect consensus."), DEFAULT_VALIDATE_PEGOUT));
     strUsage += HelpMessageOpt("-validatepegin", strprintf(_("Validate pegin claims. All functionaries must run this. (default: %u)"), DEFAULT_VALIDATE_PEGIN));
 
     return strUsage;
