@@ -21,6 +21,7 @@ static const char DB_LOCKS = 'k';
 static const char DB_BLOCK_INDEX = 'b';
 static const char DB_WITHDRAW_FLAG = 'w';
 static const char DB_INVALID_BLOCK_Q = 'q';
+static const char DB_PAK = 'p';
 
 static const char DB_BEST_BLOCK = 'B';
 static const char DB_FLAG = 'F';
@@ -181,6 +182,16 @@ bool CBlockTreeDB::ReadFlag(const std::string &name, bool &fValue) {
         return false;
     fValue = ch == '1';
     return true;
+}
+
+bool CBlockTreeDB::ReadPAKList(std::vector<std::vector<unsigned char> >& offline_list, std::vector<std::vector<unsigned char> >& online_list, bool& reject)
+{
+        return Read(std::make_pair(DB_PAK, uint256S("1")), offline_list) && Read(std::make_pair(DB_PAK, uint256S("2")), online_list) && Read(std::make_pair(DB_PAK, uint256S("3")), reject);
+}
+
+bool CBlockTreeDB::WritePAKList(const std::vector<std::vector<unsigned char> >& offline_list, const std::vector<std::vector<unsigned char> >& online_list, bool reject)
+{
+        return Write(std::make_pair(DB_PAK, uint256S("1")), offline_list) && Write(std::make_pair(DB_PAK, uint256S("2")), online_list) && Write(std::make_pair(DB_PAK, uint256S("3")), reject);
 }
 
 bool CBlockTreeDB::ReadInvalidBlockQueue(std::vector<uint256> &vBlocks) {

@@ -1672,7 +1672,67 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     if (!connman.Start(scheduler, strNodeError, connOptions))
         return InitError(strNodeError);
 
-    // ********************************************************* Step 12: finished
+    // ********************************************************* Step 12: Load PAK List
+
+    //Entire list of PAK entries from conf must be of valid format
+    std::vector<std::string> vPAK = mapMultiArgs.count("-pak") ? mapMultiArgs.at("-pak") : std::vector<std::string>();
+    bool valid_paklist = true;
+    bool is_reject = false;
+    std::vector<std::vector<unsigned char> > offline_keys;
+    std::vector<std::vector<unsigned char> > online_keys;
+    for (unsigned int i = 0; i < vPAK.size(); i++) {
+        if (vPAK[i] == "reject") {
+            is_reject = true;
+            continue;
+        }
+
+        size_t colonIndex = vPAK[i].find(":");
+        if (colonIndex == std::string::npos) {
+            valid_paklist = false;
+            break;
+        }
+
+        std::string offline = vPAK[i].substr(0, colonIndex);
+        std::string online = vPAK[i].substr(colonIndex + 1);
+
+        if (!IsHex(offline) || !IsHex(online) || offline.size() != 66 || online.size() != 66) {
+            valid_paklist = false;
+            break;
+        }
+
+        online_keys.push_back(ParseHex(online));
+        offline_keys.push_back(ParseHex(offline));
+    }
+    // pak=reject must be alone
+    if (is_reject && offline_keys.size() > 0)
+        valid_paklist = false;
+    if (!valid_paklist)
+        return InitError(_("ERROR: Invalid PAK entries given in conf file."));
+    if (is_reject || offline_keys.size() > 0) {
+        CPAKList paklist;
+        if(CPAKList::FromBytes(paklist, offline_keys, online_keys, is_reject)) {
+            g_paklist_config = paklist;
+        } else {
+            return InitError(_("ERROR: Invalid PAK entries given in conf file."));
+        }
+    } else {
+        g_paklist_config = boost::none;
+    }
+
+    // Read and parse committed pak list from disk
+    CPAKList paklist;
+    offline_keys.resize(0);
+    online_keys.resize(0);
+    bool reject;
+    if (pblocktree->ReadPAKList(offline_keys, online_keys, reject)) {
+        if (CPAKList::FromBytes(paklist, offline_keys, online_keys, reject)) {
+            g_paklist_blockchain = paklist;
+        } else {
+            return InitError(_("ERROR: Read invalid PAK list."));
+        }
+    }
+
+    // ********************************************************* Step 13: finished
 
     SetRPCWarmupFinished();
 
