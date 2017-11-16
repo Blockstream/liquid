@@ -338,10 +338,11 @@ UniValue testproposedblock(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
-            "testproposedblock \"blockhex\"\n"
+            "testproposedblock \"blockhex\" ( enforce_pegout )\n"
             "\nChecks a block proposal for validity, and that it extends chaintip\n"
             "\nArguments:\n"
             "1. \"blockhex\"    (string, required) The hex-encoded block from getnewblockhex\n"
+            "2. \"enforce_pegout\" (bool, default=true) Checks pegout authorization list commitments and pegoutproofs. This is only enforced when validatepegout is set.\n"
             "\nResult\n"
             "\nExamples:\n"
             + HelpExampleCli("testproposedblock", "<hex>")
@@ -369,6 +370,42 @@ UniValue testproposedblock(const JSONRPCRequest& request)
         if (strRejectReason.empty())
             throw JSONRPCError(RPC_VERIFY_ERROR, state.IsInvalid() ? "Block proposal was invalid" : "Error checking block proposal");
         throw JSONRPCError(RPC_VERIFY_ERROR, strRejectReason);
+    }
+
+    // Lastly, check pegout proof information
+    if (GetBoolArg("-validatepegout", DEFAULT_VALIDATE_PEGOUT) &&
+            (request.params.size() == 1 || request.params[1].get_bool() == true)) {
+
+        // Check to see if block commitment matches the expected one
+        boost::optional<CPAKList> paklist_block = GetPAKKeysFromCommitment(*block.vtx[0]);
+        // If config list is not set, no need to check commitments
+        if (g_paklist_config) {
+            if(paklist_block) {
+                if (*paklist_block != *g_paklist_config) {
+                    throw JSONRPCError(RPC_VERIFY_ERROR, "Proposal PAK commitment and config PAK do not match.");
+                }
+                // else it may be a unnecessary commitment but that's ok.
+            } else {
+                if (*g_paklist_config != g_paklist_blockchain) {
+                    throw JSONRPCError(RPC_VERIFY_ERROR, "Proposal does not have required PAK commitment.");
+                }
+            }
+        }
+
+        // Check if pegouts are allowed and have proper authorization
+        for (unsigned int i = 0; i < block.vtx.size(); i++) {
+            const CTransaction& tx = *block.vtx[i];
+            for (unsigned int j = 0; j < tx.vout.size(); j++) {
+                const CScript& scriptPubKey = tx.vout[j].scriptPubKey;
+                if (scriptPubKey.IsPegoutScript(Params().ParentGenesisBlockHash())) {
+                    // This checks against the pak list loaded from the conf file
+                    // or from the block list if no conf settings are set
+                    if (!scriptPubKey.HasValidWhitelistPegoutProof(Params().ParentGenesisBlockHash())) {
+                        throw JSONRPCError(RPC_VERIFY_ERROR, "Proposal has invalid PAK proof.");
+                    }
+                }
+            }
+        }
     }
 
     return NullUniValue;
