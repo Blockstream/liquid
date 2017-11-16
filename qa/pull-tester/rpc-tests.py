@@ -163,6 +163,7 @@ testScripts = [
     'rpcnamedargs.py',
     'listsinceblock.py',
     'p2p-leaktests.py',
+    'pak_tests.py',
 ]
 if ENABLE_ZMQ:
     testScripts.append('zmq_test.py')
