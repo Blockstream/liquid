@@ -739,6 +739,9 @@ public:
         nTimeFirstKey = 0;
         fBroadcastTransactions = false;
         blinding_derivation_key = uint256();
+        offline_key = CPubKey();
+        online_key = CPubKey();
+        offline_counter = -1;
     }
 
     std::map<uint256, CWalletTx> mapWallet;
@@ -760,6 +763,18 @@ public:
     //! The actual blinding key is computed as HMAC-SHA256(key=blinding_derivation_key, msg=scriptPubKey).
     //! There can be exceptions in mapSpecificBlindingKeys.
     uint256 blinding_derivation_key;
+
+    //! (DEPRECATED) The Offline PAK in the wallet
+    CPubKey offline_key;
+
+    //! The online PAK aka `liquid_pak` in the wallet set by `initpegoutwallet`
+    CPubKey online_key;
+
+    //! The offline xpub aka `bitcoin_xpub` in the wallet set by `initpegoutwallet`
+    CExtPubKey offline_xpub;
+
+    //! The derivation counter for offline_xpub
+    int offline_counter;
 
     const CWalletTx* GetWalletTx(const uint256& hash) const;
 

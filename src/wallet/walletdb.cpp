@@ -214,6 +214,29 @@ bool CWalletDB::WriteBlindingDerivationKey(const uint256& key)
     return Write(std::string("blindingderivationkey"), key);
 }
 
+bool CWalletDB::WriteOfflineKey(const CPubKey& key)
+{
+    return Write(std::string("offlinekey"), key);
+}
+
+bool CWalletDB::WriteOnlineKey(const CPubKey& online_key)
+{
+    return Write(std::string("onlinekey"), online_key);
+}
+
+bool CWalletDB::WriteOfflineXPubKey(const CExtPubKey& offline_xpub)
+{
+    std::vector<unsigned char> vxpub;
+    vxpub.resize(CExtPubKey::XPUB_SIZE);
+    offline_xpub.Encode(&vxpub[0]);
+    return Write(std::string("offlinexpub"), vxpub);
+}
+
+bool CWalletDB::WriteOfflineCounter(int counter)
+{
+    return Write(std::string("offlinecounter"), counter);
+}
+
 CAmount CWalletDB::GetAccountCreditDebit(const string& strAccount)
 {
     list<CAccountingEntry> entries;
@@ -566,6 +589,33 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
                 strErr = "Error reading wallet database: LoadSpecificBlindingKey failed";
                 return false;
             }
+        }
+        else if (strType == "offlinekey")
+        {
+            assert(!pwallet->offline_key.IsValid());
+            CPubKey key;
+            ssValue >> key;
+            pwallet->offline_key = key;
+        }
+        else if (strType == "onlinekey")
+        {
+            CPubKey key;
+            ssValue >> key;
+            pwallet->online_key = key;
+        }
+        else if (strType == "offlinexpub")
+        {
+            std::vector<unsigned char> vxpub;
+            CExtPubKey xpub;
+            ssValue >> vxpub;
+            xpub.Decode(&vxpub[0]);
+            pwallet->offline_xpub = xpub;
+        }
+        else if (strType == "offlinecounter")
+        {
+            int counter;
+            ssValue >> counter;
+            pwallet->offline_counter = counter;
         }
     } catch (...)
     {

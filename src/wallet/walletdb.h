@@ -169,6 +169,12 @@ public:
 
     bool WriteSpecificBlindingKey(const CScriptID& scriptid, const uint256& key);
     bool WriteBlindingDerivationKey(const uint256& key);
+    /// (DEPRECATED) Storage of Offline PAK
+    bool WriteOfflineKey(const CPubKey& key);
+    /// Storage of PAK settings
+    bool WriteOnlineKey(const CPubKey& online_key);
+    bool WriteOfflineXPubKey(const CExtPubKey& offline_xpub);
+    bool WriteOfflineCounter(int counter);
 
     DBErrors LoadWallet(CWallet* pwallet);
     DBErrors FindWalletTx(CWallet* pwallet, std::vector<uint256>& vTxHash, std::vector<CWalletTx>& vWtx);
