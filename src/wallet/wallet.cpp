@@ -163,6 +163,56 @@ void CWallet::DeriveNewChildKey(CKeyMetadata& metadata, CKey& secret)
         throw std::runtime_error(std::string(__func__) + ": Writing HD chain model failed");
 }
 
+CPubKey CWallet::GenerateOfflineKey()
+{
+
+    AssertLockHeld(cs_wallet); // mapKeyMetadata
+    bool fCompressed = CanSupportFeature(FEATURE_COMPRPUBKEY); // default to compressed public keys if we want 0.6.0 wallets
+
+    CKey secret;
+
+    // Create new metadata
+    int64_t nCreationTime = GetTime();
+    CKeyMetadata metadata(nCreationTime);
+
+    if (hdChain.masterKeyID.IsNull()) {
+        throw std::runtime_error("CWallet::GenerateOfflineKey(): Wallet must be HD to use as PAK wallet");
+    }
+
+    CKey key;                      //master key seed (256bit)
+    CExtKey masterKey;             //hd master key
+    CExtKey accountKey;            //key at m/1'
+
+    // try to get the master key
+    if (!GetKey(hdChain.masterKeyID, key))
+        throw std::runtime_error("CWallet::GetPegOutAuthExtKey(): Master key not found");
+
+    masterKey.SetMaster(key.begin(), key.size());
+
+    // derive m/1'
+    // use hardened derivation (child keys >= 0x80000000 are hardened after bip32)
+    masterKey.Derive(accountKey, BIP32_HARDENED_KEY_LIMIT+1);
+
+    secret = accountKey.key;
+
+    // Compressed public keys were introduced in version 0.6.0
+    if (fCompressed)
+        SetMinVersion(FEATURE_COMPRPUBKEY);
+
+    CPubKey pubkey = secret.GetPubKey();
+    assert(secret.VerifyPubKey(pubkey));
+
+    mapKeyMetadata[pubkey.GetID()] = metadata;
+    if (!nTimeFirstKey || nCreationTime < nTimeFirstKey)
+        nTimeFirstKey = nCreationTime;
+
+    if (!AddKeyPubKey(secret, pubkey))
+        throw std::runtime_error("CWallet::GenerateNewKey(): AddKey failed");
+
+    return pubkey;
+}
+
+
 bool CWallet::AddKeyPubKey(const CKey& secret, const CPubKey &pubkey)
 {
     AssertLockHeld(cs_wallet); // mapKeyMetadata
@@ -404,6 +454,47 @@ bool CWallet::SetMaxVersion(int nVersion)
 
     nWalletMaxVersion = nVersion;
 
+    return true;
+}
+
+bool CWallet::MaybeGenerateOfflineKey()
+{
+    LOCK(cs_wallet);
+    if (!offline_key.IsValid()) {
+        offline_key  = GenerateOfflineKey();
+        if (!CWalletDB(strWalletFile).WriteOfflineKey(offline_key)) {
+            return false;
+        }
+    }
+    return false;
+}
+
+bool CWallet::SetOnlinePubKey(const CPubKey& online_key_in)
+{
+    LOCK(cs_wallet);
+    if (!CWalletDB(strWalletFile).WriteOnlineKey(online_key_in)) {
+        return false;
+    }
+    online_key = online_key_in;
+    return true;
+}
+
+bool CWallet::SetOfflineXPubKey(const CExtPubKey& offline_xpub_in)
+{
+    LOCK(cs_wallet);
+    if (!CWalletDB(strWalletFile).WriteOfflineXPubKey(offline_xpub_in)) {
+        return false;
+    }
+    offline_xpub = offline_xpub_in;
+    return true;
+}
+
+bool CWallet::SetOfflineCounter(int counter) {
+    LOCK(cs_wallet);
+    if (!CWalletDB(strWalletFile).WriteOfflineCounter(counter)) {
+        return false;
+    }
+    offline_counter = counter;
     return true;
 }
 

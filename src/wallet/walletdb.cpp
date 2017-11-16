@@ -227,7 +227,7 @@ bool CWalletDB::WriteOnlineKey(const CPubKey& online_key)
 bool CWalletDB::WriteOfflineXPubKey(const CExtPubKey& offline_xpub)
 {
     std::vector<unsigned char> vxpub;
-    vxpub.resize(CExtPubKey::XPUB_SIZE);
+    vxpub.resize(BIP32_EXTKEY_SIZE);
     offline_xpub.Encode(&vxpub[0]);
     return Write(std::string("offlinexpub"), vxpub);
 }

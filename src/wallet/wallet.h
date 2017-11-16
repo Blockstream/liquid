@@ -807,6 +807,8 @@ public:
      * Generate a new key
      */
     CPubKey GenerateNewKey();
+    //! Generates offline key. Should only be called once per wallet on LoadWallet
+    CPubKey GenerateOfflineKey();
     void DeriveNewChildKey(CKeyMetadata& metadata, CKey& secret);
     //! Adds a key to the store, and saves it to disk.
     bool AddKeyPubKey(const CKey& key, const CPubKey &pubkey) override;
@@ -991,6 +993,14 @@ public:
 
     //! get the current wallet format (the oldest client version guaranteed to understand this wallet)
     int GetVersion() { LOCK(cs_wallet); return nWalletVersion; }
+
+    //! (DEPRECATED) Generates offline key and places in wallet if it doesn't already exist
+    bool MaybeGenerateOfflineKey();
+
+    //! Setters for online/offline pubkey pairs for PAK
+    bool SetOnlinePubKey(const CPubKey& online_key_in);
+    bool SetOfflineXPubKey(const CExtPubKey& offline_xpub_in);
+    bool SetOfflineCounter(int counter);
 
     //! Get wallet transactions that conflict with given transaction (spend same outputs)
     std::set<uint256> GetConflicts(const uint256& txid) const;

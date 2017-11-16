@@ -584,6 +584,28 @@ UniValue echo(const JSONRPCRequest& request)
     return request.params;
 }
 
+extern CParentBitcoinAddress DeriveBitcoinOfflineAddress(const CExtPubKey& xpub, const uint32_t counter);
+
+UniValue FormatPAKList(CPAKList &paklist) {
+    UniValue paklist_value(UniValue::VOBJ);
+    std::vector<std::vector<unsigned char> > offline_keys;
+    std::vector<std::vector<unsigned char> > online_keys;
+    bool is_reject;
+    paklist.ToBytes(offline_keys, online_keys, is_reject);
+
+    UniValue retOnline(UniValue::VARR);
+    UniValue retOffline(UniValue::VARR);
+    for (unsigned int i = 0; i < offline_keys.size(); i++) {
+        retOffline.push_back(HexStr(offline_keys[i]));
+        retOnline.push_back(HexStr(online_keys[i]));
+
+    }
+    paklist_value.push_back(Pair("online", retOnline));
+    paklist_value.push_back(Pair("offline", retOffline));
+    paklist_value.push_back(Pair("reject", is_reject));
+    return paklist_value;
+}
+
 UniValue getpakinfo(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0)
