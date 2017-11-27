@@ -49,12 +49,8 @@ bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType, const bool w
             return false;
         if (m < 1 || m > n)
             return false;
-    // No special OP_RETURN limits, we are using them for peg-out template
-    } else if (whichType == TX_NULL_DATA &&
-               (GetBoolArg("-validatepegout", DEFAULT_VALIDATE_PEGOUT) &&
-                scriptPubKey.IsPegoutScript(Params().ParentGenesisBlockHash()) &&
-                !scriptPubKey.HasValidWhitelistPegoutProof(Params().ParentGenesisBlockHash()))) {
-          return false;
+    } else if (whichType == TX_NULL_DATA && !scriptPubKey.IsPegoutScript(Params().ParentGenesisBlockHash()) && (!fAcceptDatacarrier || scriptPubKey.size() > nMaxDatacarrierBytes)) {
+            return false;
     } else if (whichType == TX_TRUE) {
         return false;
     } else if (!witnessEnabled && (whichType == TX_WITNESS_V0_KEYHASH || whichType == TX_WITNESS_V0_SCRIPTHASH)) {
@@ -97,8 +93,15 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason, const bool witnes
             return false;
         }
 
-        if (whichType == TX_NULL_DATA)
+        if (whichType == TX_NULL_DATA) {
             nDataOut++;
+            if ((GetBoolArg("-validatepegout", DEFAULT_VALIDATE_PEGOUT) &&
+                txout.scriptPubKey.IsPegoutScript(Params().ParentGenesisBlockHash()) &&
+                (!txout.scriptPubKey.HasValidWhitelistPegoutProof(Params().ParentGenesisBlockHash())
+                 || !txout.nAsset.IsExplicit() || !txout.nValue.IsExplicit()))) {
+                return false;
+            }
+        }
         else if ((whichType == TX_MULTISIG) && (!fIsBareMultisigStd)) {
             reason = "bare-multisig";
             return false;
