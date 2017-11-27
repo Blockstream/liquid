@@ -4057,65 +4057,7 @@ UniValue sendtomainchainmanual(const JSONRPCRequest& request)
 
     return wtxNew.GetHash().GetHex();
 }
-/*
-UniValue sendtomainchain(const JSONRPCRequest& request)
-{
-    if (!EnsureWalletIsAvailable(request.fHelp))
-        return NullUniValue;
 
-    if (request.fHelp || request.params.size() != 2)
-        throw runtime_error(
-            "sendtomainchain mainchainaddress amount\n"
-            "\nSends sidechain funds to the given mainchain address, through the federated withdraw mechanism\n"
-            + HelpRequiringPassphrase() +
-            "\nArguments:\n"
-            "1. \"address\"        (string, required) The destination address on Bitcoin mainchain\n"
-            "2. \"amount\"         (numeric, required) The amount being sent to Bitcoin mainchain\n"
-            "\nResult:\n"
-            "\"txid\"              (string) Transaction ID of the resulting sidechain transaction\n"
-            "\nExamples:\n"
-            + HelpExampleCli("sendtomainchain", "\"mgWEy4vBJSHt3mC8C2SEWJQitifb4qeZQq\" 0.1")
-            + HelpExampleRpc("sendtomainchain", "\"mgWEy4vBJSHt3mC8C2SEWJQitifb4qeZQq\" 0.1")
-        );
-
-    LOCK2(cs_main, pwalletMain->cs_wallet);
-
-    EnsureWalletIsUnlocked();
-
-    CParentBitcoinAddress address(request.params[0].get_str());
-    if (!address.IsValid())
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
-
-    CAmount nAmount = AmountFromValue(request.params[1]);
-    if (nAmount <= 0)
-        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for send");
-
-    // Parse Bitcoin address for destination, embed script
-    CScript scriptPubKeyMainchain(GetScriptForDestination(address.Get()));
-
-    uint256 genesisBlockHash = Params().ParentGenesisBlockHash();
-
-    // Asset type is implicit, no need to add to script
-    CScript scriptPubKey;
-    scriptPubKey << OP_RETURN;
-    scriptPubKey << std::vector<unsigned char>(genesisBlockHash.begin(), genesisBlockHash.end());
-    scriptPubKey << std::vector<unsigned char>(scriptPubKeyMainchain.begin(), scriptPubKeyMainchain.end());
-
-    EnsureWalletIsUnlocked();
-
-    CWalletTx wtxNew;
-    SendMoney(scriptPubKey, nAmount, Params().GetConsensus().pegged_asset, false, CPubKey(), wtxNew, true);
-
-    std::string blinds;
-    for (unsigned int i=0; i<wtxNew.tx->vout.size(); i++) {
-        blinds += "blind:" + wtxNew.GetOutputBlindingFactor(i).ToString() + "\n";
-    }
-
-    AuditLogPrintf("%s : sendtomainchain %s\nblinds:\n%s\n", getUser(), wtxNew.tx->GetHash().GetHex(), blinds);
-
-    return wtxNew.GetHash().GetHex();
-}
-*/
 extern UniValue signrawtransaction(const JSONRPCRequest& request);
 extern UniValue sendrawtransaction(const JSONRPCRequest& request);
 
