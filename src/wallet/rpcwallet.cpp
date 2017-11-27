@@ -3958,7 +3958,7 @@ UniValue sendtomainchain(const JSONRPCRequest& request)
     EnsureWalletIsUnlocked();
 
     CWalletTx wtxNew;
-	SendMoney(scriptPubKey, nAmount, Params().GetConsensus().pegged_asset, false, CPubKey(), wtxNew, true);
+    SendMoney(scriptPubKey, nAmount, Params().GetConsensus().pegged_asset, false, CPubKey(), wtxNew, true);
 
     pwalletMain->SetOfflineCounter(counter+1);
 
