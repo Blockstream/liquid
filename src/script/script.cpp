@@ -243,9 +243,9 @@ bool CScript::IsPegoutScript(const uint256& genesis_hash) const
     opcodetype opcode;
 
     // OP_RETURN
-	if (!GetOp(pc, opcode, data) || opcode != OP_RETURN) {
-		return false;
-	}
+    if (!GetOp(pc, opcode, data) || opcode != OP_RETURN) {
+        return false;
+    }
 
     if (!GetOp(pc, opcode, data) || data.size() != 32 ) {
         return false;
