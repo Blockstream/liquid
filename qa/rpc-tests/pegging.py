@@ -31,7 +31,11 @@ def sync_all(sidechain, sidechain2):
     return block
 
 fedpeg_key="cPxqWyf1HDGpGFH1dnfjz8HbiWxvwG8WXyetbuAiw4thKXUdXLpR"
-fedpeg_pubkey="512103dff4923d778550cc13ce0d887d737553b4b58f4e8e886507fc39f5e447b2186451ae"
+fedpeg_pubkey="2103dff4923d778550cc13ce0d887d737553b4b58f4e8e886507fc39f5e447b21864"
+# CSV script for watchmen
+fedpeg_script="7452876351"+fedpeg_pubkey+"5167020001b27552"+fedpeg_pubkey+fedpeg_pubkey+"5268ae"
+# CSV script with identical n-of-X, resulting in failure to reach else clause
+bad_fedpeg_script="7452876351"+fedpeg_pubkey+"5167020001b27551"+fedpeg_pubkey+"5168ae"
 
 bitcoin_datadir="/tmp/"+''.join(random.choice('0123456789ABCDEF') for i in range(5))
 bitcoin_pass=''.join(random.choice('0123456789ABCDEF') for i in range(10))
@@ -70,7 +74,7 @@ with open(os.path.join(sidechain_datadir, "elements.conf"), 'w') as f:
         f.write("discover=0\n")
         f.write("testnet=0\n")
         f.write("txindex=1\n")
-        f.write("fedpegscript="+fedpeg_pubkey+"\n")
+        f.write("fedpegscript="+fedpeg_script+"\n")
         f.write("daemon=1\n")
         f.write("mainchainrpchost=127.0.0.1\n")
         f.write("mainchainrpcport="+str(bitcoin_port)+"\n")
@@ -90,7 +94,7 @@ with open(os.path.join(sidechain2_datadir, "elements.conf"), 'w') as f:
         f.write("discover=0\n")
         f.write("testnet=0\n")
         f.write("txindex=1\n")
-        f.write("fedpegscript="+fedpeg_pubkey+"\n")
+        f.write("fedpegscript="+fedpeg_script+"\n")
         f.write("daemon=1\n")
         f.write("mainchainrpchost=127.0.0.1\n")
         f.write("mainchainrpcport="+str(bitcoin_port)+"\n")
@@ -116,7 +120,8 @@ try:
     sidechainstart = sys.argv[2]+"/elementsd -datadir="+sidechain_datadir + sidechain_args
     subprocess.Popen(sidechainstart.split(), stdout=subprocess.PIPE)
 
-    sidechain2start = sys.argv[2]+"/elementsd -datadir="+sidechain2_datadir + sidechain_args
+    # Start with invalid fedpegscript
+    sidechain2start = sys.argv[2]+"/elementsd -datadir="+sidechain2_datadir + " -fedpegscript="+bad_fedpeg_script
     subprocess.Popen(sidechain2start.split(), stdout=subprocess.PIPE)
 
     print("Daemons started")
@@ -125,10 +130,28 @@ try:
     bitcoin = AuthServiceProxy("http://bitcoinrpc:"+bitcoin_pass+"@127.0.0.1:"+str(bitcoin_port))
     sidechain = AuthServiceProxy("http://sidechainrpc:"+sidechain_pass+"@127.0.0.1:"+str(sidechain_port))
     sidechain2 = AuthServiceProxy("http://sidechainrpc2:"+sidechain2_pass+"@127.0.0.1:"+str(sidechain2_port))
+
+    try:
+        sidechain2.getwalletinfo()
+        raise Exception('Invalid fedpegscript should abort start')
+    except Exception as e:
+        # BrokenPipe error
+        assert(type(e) == NameError)
+        pass
+
+    sidechain2start = sys.argv[2]+"/elementsd -datadir="+sidechain2_datadir + sidechain_args
+    subprocess.Popen(sidechain2start.split(), stdout=subprocess.PIPE)
+
+    print("Restarting second sidechain daemon with proper fedpegscript")
+    time.sleep(3)
+
+    sidechain2 = AuthServiceProxy("http://sidechainrpc2:"+sidechain2_pass+"@127.0.0.1:"+str(sidechain2_port))
+
     print("Daemons started, making blocks to get funds")
 
     bitcoin.generate(101)
     sidechain.generate(101)
+    sidechain2.getwalletinfo()
 
     addr = bitcoin.getnewaddress()
 

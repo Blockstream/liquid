@@ -245,7 +245,7 @@ bool static CheckPubKeyEncoding(const valtype &vchPubKey, unsigned int flags, co
     return true;
 }
 
-bool static CheckMinimalPush(const valtype& data, opcodetype opcode) {
+bool CheckMinimalPush(const valtype& data, opcodetype opcode) {
     if (data.size() == 0) {
         // Could have used OP_0.
         return opcode == OP_0;

@@ -633,6 +633,8 @@ public:
      */
     unsigned int GetSigOpCount(const CScript& scriptSig) const;
 
+    // Quick sanity check for user-input fedredeemscript
+    bool IsWatchmenScript() const;
     bool IsPayToScriptHash() const;
     bool IsPayToWitnessScriptHash() const;
     bool IsPayToPubkeyHash() const;
