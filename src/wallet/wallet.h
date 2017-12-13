@@ -739,6 +739,9 @@ public:
         nTimeFirstKey = 0;
         fBroadcastTransactions = false;
         blinding_derivation_key = uint256();
+        offline_key = CPubKey();
+        online_key = CPubKey();
+        offline_counter = -1;
     }
 
     std::map<uint256, CWalletTx> mapWallet;
@@ -760,6 +763,18 @@ public:
     //! The actual blinding key is computed as HMAC-SHA256(key=blinding_derivation_key, msg=scriptPubKey).
     //! There can be exceptions in mapSpecificBlindingKeys.
     uint256 blinding_derivation_key;
+
+    //! (DEPRECATED) The Offline PAK in the wallet
+    CPubKey offline_key;
+
+    //! The online PAK aka `liquid_pak` in the wallet set by `initpegoutwallet`
+    CPubKey online_key;
+
+    //! The offline xpub aka `bitcoin_xpub` in the wallet set by `initpegoutwallet`
+    CExtPubKey offline_xpub;
+
+    //! The derivation counter for offline_xpub
+    int offline_counter;
 
     const CWalletTx* GetWalletTx(const uint256& hash) const;
 
@@ -792,6 +807,8 @@ public:
      * Generate a new key
      */
     CPubKey GenerateNewKey();
+    //! Generates offline key. Should only be called once per wallet on LoadWallet
+    CPubKey GenerateOfflineKey();
     void DeriveNewChildKey(CKeyMetadata& metadata, CKey& secret);
     //! Adds a key to the store, and saves it to disk.
     bool AddKeyPubKey(const CKey& key, const CPubKey &pubkey) override;
@@ -976,6 +993,14 @@ public:
 
     //! get the current wallet format (the oldest client version guaranteed to understand this wallet)
     int GetVersion() { LOCK(cs_wallet); return nWalletVersion; }
+
+    //! (DEPRECATED) Generates offline key and places in wallet if it doesn't already exist
+    bool MaybeGenerateOfflineKey();
+
+    //! Setters for online/offline pubkey pairs for PAK
+    bool SetOnlinePubKey(const CPubKey& online_key_in);
+    bool SetOfflineXPubKey(const CExtPubKey& offline_xpub_in);
+    bool SetOfflineCounter(int counter);
 
     //! Get wallet transactions that conflict with given transaction (spend same outputs)
     std::set<uint256> GetConflicts(const uint256& txid) const;

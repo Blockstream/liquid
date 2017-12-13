@@ -635,7 +635,21 @@ public:
 
     bool IsPayToScriptHash() const;
     bool IsPayToWitnessScriptHash() const;
+    bool IsPayToPubkeyHash() const;
     bool IsWitnessProgram(int& version, std::vector<unsigned char>& program) const;
+
+    /**
+     * Returns true if script follows OP_RETURN <genesis_block_hash> <destination_scriptpubkey>
+     * it may also have additional pushes at the end.
+     * */
+    bool IsPegoutScript(const uint256& genesis_hash) const;
+
+	/**
+     * Returns true if the script includes valid pegout proof
+     * given the PAK list loaded. Two pushes after regular pegout script:
+     * <full_pubkey> <proof>
+     */
+    bool HasValidWhitelistPegoutProof(const uint256& genesis_hash) const;
 
     /** Called by IsStandardTx and P2SH/BIP62 VerifyScript (which makes it consensus-critical). */
     bool IsPushOnly(const_iterator pc) const;

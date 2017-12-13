@@ -17,6 +17,7 @@
 #include "compat.h"
 #include "tinyformat.h"
 #include "utiltime.h"
+#include "primitives/block.h"
 
 #include <atomic>
 #include <exception>
@@ -42,6 +43,8 @@ public:
 };
 
 extern const std::map<std::string, std::vector<std::string> >& mapMultiArgs;
+extern boost::optional<CPAKList> g_paklist_config;
+extern CPAKList g_paklist_blockchain;
 extern bool fDebug;
 extern bool fPrintToConsole;
 extern bool fPrintToDebugLog;

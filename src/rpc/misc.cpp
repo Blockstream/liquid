@@ -584,6 +584,92 @@ UniValue echo(const JSONRPCRequest& request)
     return request.params;
 }
 
+extern CParentBitcoinAddress DeriveBitcoinOfflineAddress(const CExtPubKey& xpub, const uint32_t counter);
+
+UniValue FormatPAKList(CPAKList &paklist) {
+    UniValue paklist_value(UniValue::VOBJ);
+    std::vector<std::vector<unsigned char> > offline_keys;
+    std::vector<std::vector<unsigned char> > online_keys;
+    bool is_reject;
+    paklist.ToBytes(offline_keys, online_keys, is_reject);
+
+    UniValue retOnline(UniValue::VARR);
+    UniValue retOffline(UniValue::VARR);
+    for (unsigned int i = 0; i < offline_keys.size(); i++) {
+        retOffline.push_back(HexStr(offline_keys[i]));
+        retOnline.push_back(HexStr(online_keys[i]));
+
+    }
+    paklist_value.push_back(Pair("online", retOnline));
+    paklist_value.push_back(Pair("offline", retOffline));
+    paklist_value.push_back(Pair("reject", is_reject));
+    return paklist_value;
+}
+
+UniValue getpakinfo(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 0)
+        throw runtime_error(
+            "getpakinfo\n"
+            "\nReturns relevant pegout authorization key (PAK) information about this node, both from command line arguments and wallet. If the wallet fields aren't showing this means `initpegoutwallet` has not been invoked on this wallet.\n"
+            "\nResult:\n"
+            "{\n"
+                "\"paklist\"          (dict) The PAK list loaded from beta.conf at startup\n"
+                "\"block_paklist\"    (dict) The PAK list loaded from latest block commitment\n"
+                "\"validate_pegout\"  (bool) If pegouts are being validated by the client\n"
+                "\"derivation_path\"  (string) The next index to be used by the wallet for `sendtomainchain`.\n"
+                "\"bitcoin_xpub\"     (string) The Bitcoin xpubkey loaded in the wallet for pegouts.\n"
+                "\"liquid_pak\"       (string) Pubkey in hex corresponding to the Liquid PAK loaded in the wallet for pegouts.\n"
+                "\"liquid_pak_address\" (string) The corresponding address for `liquid_pak`. Useful for `dumpprivkey` for wallet backup or transfer.\n"
+                "\"address_lookahead\"(array)  The three next Bitcoin addresses the wallet will use for `sendtomainchain` based on the internal counter.\n"
+            "}\n"
+        );
+
+#ifdef ENABLE_WALLET
+    LOCK2(cs_main, pwalletMain ? &pwalletMain->cs_wallet : NULL);
+#else
+    LOCK(cs_main);
+#endif
+
+    UniValue paklist(UniValue::VOBJ);
+    UniValue blockpaklist(UniValue::VOBJ);
+    UniValue blockretOffline(UniValue::VARR);
+    UniValue ret(UniValue::VOBJ);
+
+    UniValue paklist_value(UniValue::VOBJ);
+    if (g_paklist_config) {
+        paklist_value = FormatPAKList(*g_paklist_config);
+    }
+    ret.push_back(Pair("config_paklist", paklist_value));
+    ret.push_back(Pair("block_paklist", FormatPAKList(g_paklist_blockchain)));
+
+    ret.push_back(Pair("validate_pegout", GetBoolArg("-validatepegout", DEFAULT_VALIDATE_PEGOUT)));
+
+#ifdef ENABLE_WALLET
+    if (pwalletMain && pwalletMain->offline_counter != -1) {
+        std::stringstream ss;
+        ss << pwalletMain->offline_counter;
+        ret.push_back(Pair("derivation_path", "/0/"+ss.str()));
+
+        CExtPubKey& xpub = pwalletMain->offline_xpub;
+
+        std::string strXpub = CBitcoinExtPubKey(xpub).ToString();
+
+        ret.push_back(Pair("bitcoin_xpub", strXpub));
+        ret.push_back(Pair("liquid_pak", HexStr(pwalletMain->online_key)));
+        ret.push_back(Pair("liquid_pak_address", CBitcoinAddress(pwalletMain->online_key.GetID()).ToString()));
+
+        UniValue address_list(UniValue::VARR);
+        for (unsigned int i = 0; i < 3; i++) {
+            address_list.push_back(DeriveBitcoinOfflineAddress(xpub, pwalletMain->offline_counter+i).ToString());
+        }
+        ret.push_back(Pair("address_lookahead", address_list));
+    }
+#endif
+    return ret;
+}
+
+
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         okSafeMode
   //  --------------------- ------------------------  -----------------------  ----------
@@ -594,7 +680,7 @@ static const CRPCCommand commands[] =
     { "util",               "createblindedaddress",   &createblindedaddress,   true,  {} },
     { "util",               "verifymessage",          &verifymessage,          true,  {"address","signature","message"} },
     { "util",               "signmessagewithprivkey", &signmessagewithprivkey, true,  {"privkey","message"} },
-
+    { "util",               "getpakinfo",             &getpakinfo,             true, {}},
     /* Not shown in help */
     { "hidden",             "setmocktime",            &setmocktime,            true,  {"timestamp"}},
     { "hidden",             "echo",                   &echo,                   true,  {"arg0","arg1","arg2","arg3","arg4","arg5","arg6","arg7","arg8","arg9"}},

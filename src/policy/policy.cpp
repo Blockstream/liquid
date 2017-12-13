@@ -11,6 +11,7 @@
 #include "tinyformat.h"
 #include "util.h"
 #include "utilstrencodings.h"
+#include "chainparams.h"
 
 #include <boost/foreach.hpp>
 
@@ -48,14 +49,13 @@ bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType, const bool w
             return false;
         if (m < 1 || m > n)
             return false;
-    } else if (whichType == TX_NULL_DATA &&
-               (!fAcceptDatacarrier || scriptPubKey.size() > nMaxDatacarrierBytes))
-          return false;
-    else if (whichType == TX_TRUE)
+    } else if (whichType == TX_NULL_DATA && !scriptPubKey.IsPegoutScript(Params().ParentGenesisBlockHash()) && (!fAcceptDatacarrier || scriptPubKey.size() > nMaxDatacarrierBytes)) {
+            return false;
+    } else if (whichType == TX_TRUE) {
         return false;
-
-    else if (!witnessEnabled && (whichType == TX_WITNESS_V0_KEYHASH || whichType == TX_WITNESS_V0_SCRIPTHASH))
+    } else if (!witnessEnabled && (whichType == TX_WITNESS_V0_KEYHASH || whichType == TX_WITNESS_V0_SCRIPTHASH)) {
         return false;
+    }
 
     return whichType != TX_NONSTANDARD;
 }
@@ -88,13 +88,20 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason, const bool witnes
     unsigned int nDataOut = 0;
     txnouttype whichType;
     BOOST_FOREACH(const CTxOut& txout, tx.vout) {
-        if (!txout.IsFee() && !::IsStandard(txout.scriptPubKey, whichType, witnessEnabled)) {
+        if (!::IsStandard(txout.scriptPubKey, whichType, witnessEnabled) && !txout.IsFee()) {
             reason = "scriptpubkey";
             return false;
         }
 
-        if (whichType == TX_NULL_DATA)
+        if (whichType == TX_NULL_DATA) {
             nDataOut++;
+            if ((GetBoolArg("-validatepegout", DEFAULT_VALIDATE_PEGOUT) &&
+                txout.scriptPubKey.IsPegoutScript(Params().ParentGenesisBlockHash()) &&
+                (!txout.scriptPubKey.HasValidWhitelistPegoutProof(Params().ParentGenesisBlockHash())
+                 || !txout.nAsset.IsExplicit() || !txout.nValue.IsExplicit()))) {
+                return false;
+            }
+        }
         else if ((whichType == TX_MULTISIG) && (!fIsBareMultisigStd)) {
             reason = "bare-multisig";
             return false;

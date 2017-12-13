@@ -27,6 +27,8 @@
 #include <utility>
 #include <vector>
 
+#include <boost/optional.hpp>
+
 #include <atomic>
 
 #include <boost/unordered_map.hpp>
@@ -121,6 +123,8 @@ static const unsigned int MAX_FEEFILTER_CHANGE_DELAY = 5 * 60;
 static const int64_t BLOCK_DOWNLOAD_TIMEOUT_BASE = 1000000;
 /** Additional block download timeout per parallel downloading peer (i.e. 5 min) */
 static const int64_t BLOCK_DOWNLOAD_TIMEOUT_PER_PEER = 500000;
+
+static const bool DEFAULT_VALIDATE_PEGOUT = true;
 
 static const unsigned int DEFAULT_LIMITFREERELAY = 15;
 static const bool DEFAULT_RELAYPRIORITY = true;
@@ -541,6 +545,9 @@ void UpdateUncommittedBlockStructures(CBlock& block, const CBlockIndex* pindexPr
 
 /** Produce the necessary coinbase commitment for a block (modifies the hash, don't call for mined blocks). */
 std::vector<unsigned char> GenerateCoinbaseCommitment(CBlock& block, const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams);
+
+/** Extract pak commitment from coinbase, if it exists. List must be ordered, but not necessarily consecutive in output index */
+boost::optional<CPAKList> GetPAKKeysFromCommitment(const CTransaction& coinbase);
 
 /** Calculates script necessary for p2ch peg-in transactions */
 CScript calculate_contract(const CScript& federationRedeemScript, const CScript& witnessProgram);

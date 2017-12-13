@@ -2791,6 +2791,17 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         if (!pblocktree->WriteTxIndex(vPos))
             return AbortNode(state, "Failed to write transaction index");
 
+    // Get pak commitment from coinbase, if it exists
+    boost::optional<CPAKList> paklist = GetPAKKeysFromCommitment(*block.vtx[0]);
+    if (paklist) {
+        std::vector<std::vector<unsigned char> > offline_keys;
+        std::vector<std::vector<unsigned char> > online_keys;
+        bool is_reject;
+        paklist->ToBytes(offline_keys, online_keys, is_reject);
+        pblocktree->WritePAKList(offline_keys, online_keys, is_reject);
+        g_paklist_blockchain = *paklist;
+    }
+
     // add this block to the view's block chain
     view.SetBestBlock(pindex->GetBlockHash());
 
@@ -3797,6 +3808,86 @@ void UpdateUncommittedBlockStructures(CBlock& block, const CBlockIndex* pindexPr
         tx.wit.vtxinwit[0].scriptWitness.stack.resize(1);
         tx.wit.vtxinwit[0].scriptWitness.stack[0] = nonce;
         block.vtx[0] = MakeTransactionRef(std::move(tx));
+    }
+}
+
+boost::optional<CPAKList> GetPAKKeysFromCommitment(const CTransaction& coinbase)
+{
+    CScript expected_pubkey;
+    expected_pubkey.resize(6);
+    expected_pubkey[0] = OP_RETURN;
+    expected_pubkey[1] = 0x04;
+    expected_pubkey[2] = 0xab;
+    expected_pubkey[3] = 0x22;
+    expected_pubkey[4] = 0xaa;
+    expected_pubkey[5] = 0xee;
+
+    std::vector<std::vector<unsigned char> > offline_keys;
+    std::vector<std::vector<unsigned char> > online_keys;
+    bool is_reject = false;
+    for (unsigned int i = 0; i < coinbase.vout.size(); i++) {
+        const CScript& scriptPubKey = coinbase.vout[i].scriptPubKey;
+        // OP + push + 4 bytes + push + 33 bytes + push + 33 bytes
+        // or
+        // OP + push + 4 bytes + push + 5/6 bytes (CLEAR & REJECT)
+        if (scriptPubKey.size() != 74 && scriptPubKey.size() != 12 && scriptPubKey.size() != 13) {
+            continue;
+        }
+        int j = 0;
+        for (; j < (int)expected_pubkey.size(); j++) {
+            if (scriptPubKey[j] != expected_pubkey[j]){
+                j = -1;
+                break;
+            }
+        }
+        if (j == -1) {
+            continue;
+        }
+
+        CScript::const_iterator pc = scriptPubKey.begin();
+        std::vector<unsigned char> data;
+        opcodetype opcode;
+
+        scriptPubKey.GetOp(pc, opcode, data);
+        scriptPubKey.GetOp(pc, opcode, data);
+
+        if (!scriptPubKey.GetOp(pc, opcode, data)){
+            continue;
+        }
+
+        // Check for pak list reject signal
+        // Returns an empty list regardless of other commitments
+        if (data.size() == 6 && data[0] == 'R' && data[1] == 'E' && data[2] == 'J' && data[3] == 'E' && data[4] == 'C' && data[5] == 'T') {
+            is_reject = true;
+            continue;
+        }
+
+        // Check for offline key
+        if (data.size() != 33) {
+            continue;
+        }
+
+        // Check for online key
+        std::vector<unsigned char> data_online;
+        if (!scriptPubKey.GetOp(pc, opcode, data_online) || data_online.size() != 33) {
+            continue;
+        }
+
+        offline_keys.push_back(data);
+        online_keys.push_back(data_online);
+    }
+    if (is_reject) {
+        offline_keys.clear();
+        online_keys.clear();
+    }
+    if (!is_reject && offline_keys.size() == 0) {
+        return boost::none;
+    }
+    CPAKList paklist;
+    if (!CPAKList::FromBytes(paklist, offline_keys, online_keys, is_reject)) {
+        return boost::none;
+    } else {
+        return paklist;
     }
 }
 
