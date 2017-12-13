@@ -4305,6 +4305,7 @@ UniValue issueasset(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 3)
         throw runtime_error(
+            "**DISABLED IN LIQUID V1***\n"
             "issueasset assetamount tokenamount ( blind )\n"
             "\nCreate an asset. Must have funds in wallet to do so. Returns asset hex id.\n"
             "\nArguments:\n"
@@ -4324,74 +4325,7 @@ UniValue issueasset(const JSONRPCRequest& request)
             + HelpExampleRpc("issueasset", "10, 0")
         );
 
-    LOCK2(cs_main, pwalletMain->cs_wallet);
-
-    CAmount nAmount = AmountFromValue(request.params[0]);
-    CAmount nTokens = AmountFromValue(request.params[1]);
-    if (nAmount == 0 && nTokens == 0) {
-        throw JSONRPCError(RPC_TYPE_ERROR, "Issuance must have one non-zero component");
-    }
-
-    bool fBlindIssuances = request.params.size() < 3 || request.params[2].get_bool();
-
-    if (!pwalletMain->IsLocked())
-        pwalletMain->TopUpKeyPool();
-
-    // Generate a new key that is added to wallet
-    CPubKey newKey;
-    CKeyID keyID;
-    CBitcoinAddress assetAddr;
-    CBitcoinAddress tokenAddr;
-    CPubKey assetKey;
-    CPubKey tokenKey;
-
-    if (nAmount > 0) {
-        if (!pwalletMain->GetKeyFromPool(newKey))
-            throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
-        keyID = newKey.GetID();
-        pwalletMain->SetAddressBook(keyID, "", "receive");
-        assetAddr = CBitcoinAddress(keyID);
-        assetKey = pwalletMain->GetBlindingPubKey(GetScriptForDestination(assetAddr.Get()));
-    }
-    if (nTokens > 0) {
-        if (!pwalletMain->GetKeyFromPool(newKey))
-            throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
-        keyID = newKey.GetID();
-        pwalletMain->SetAddressBook(keyID, "", "receive");
-        tokenAddr = CBitcoinAddress(keyID);
-        tokenKey = pwalletMain->GetBlindingPubKey(GetScriptForDestination(CTxDestination(keyID)));
-    }
-
-    CWalletTx wtx;
-    uint256 dummyentropy;
-    CAsset dummyasset;
-    SendGenerationTransaction(GetScriptForDestination(assetAddr.Get()), assetKey, GetScriptForDestination(tokenAddr.Get()), tokenKey, nAmount, nTokens, fBlindIssuances, dummyentropy, dummyasset, dummyasset, wtx);
-
-    // Calculate asset type, assumes first vin is used for issuance
-    uint256 entropy;
-    CAsset asset;
-    CAsset token;
-    GenerateAssetEntropy(entropy, wtx.tx->vin[0].prevout, uint256());
-    CalculateAsset(asset, entropy);
-    CalculateReissuanceToken(token, entropy, fBlindIssuances);
-
-    std::string blinds;
-    for (unsigned int i=0; i<wtx.tx->vout.size(); i++) {
-        blinds += "blind:" + wtx.GetOutputBlindingFactor(i).ToString() + "\n";
-        blinds += "assetblind:" + wtx.GetOutputAssetBlindingFactor(i).ToString() + "\n";
-    }
-    blinds += "issuanceblind:" + wtx.GetIssuanceBlindingFactor(0, false).ToString() + "\n";
-    blinds += "tokenblind:" + wtx.GetIssuanceBlindingFactor(0, true).ToString() + "\n";
-
-    AuditLogPrintf("%s : issueasset txid:%s\nblinds:\n%s\n", getUser(), wtx.GetHash().GetHex(), blinds);
-
-    UniValue ret(UniValue::VOBJ);
-    ret.push_back(Pair("txid", wtx.tx->GetHash().GetHex()));
-    ret.push_back(Pair("vin", 0));
-    ret.push_back(Pair("entropy", entropy.GetHex()));
-    ret.push_back(Pair("asset", asset.GetHex()));
-    ret.push_back(Pair("token", token.GetHex()));
-    return ret;
+    throw JSONRPCError(RPC_MISC_ERROR, "Issuances are disabled on Liquid v1.");
 }
 
 UniValue reissueasset(const JSONRPCRequest& request)
@@ -4401,6 +4335,7 @@ UniValue reissueasset(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() != 2)
         throw runtime_error(
+            "**DISABLED IN LIQUID V1***\n"
             "reissueasset asset assetamount\n"
             "\nCreate more of an already issued asset. Must have reissuance token in wallet to do so. Reissuing does not affect your reissuance token balance, only asset.\n"
             "\nArguments:\n"
@@ -4416,82 +4351,7 @@ UniValue reissueasset(const JSONRPCRequest& request)
             + HelpExampleRpc("reissueasset", "<asset>, 0")
         );
 
-    LOCK2(cs_main, pwalletMain->cs_wallet);
-
-    std::string assetstr = request.params[0].get_str();
-
-    CAsset asset = GetAssetFromString(assetstr);
-
-    CAmount nAmount = AmountFromValue(request.params[1]);
-    if (nAmount <= 0)
-        throw JSONRPCError(RPC_TYPE_ERROR, "Reissuance must create a non-zero amount.");
-
-    if (!pwalletMain->IsLocked())
-        pwalletMain->TopUpKeyPool();
-
-    // Find the entropy and reissuance token in wallet
-    std::map<uint256, std::pair<CAsset, CAsset> > tokenMap = pwalletMain->GetReissuanceTokenTypes();
-    CAsset reissuanceToken;
-    uint256 entropy;
-    for (const auto& it : tokenMap) {
-        if (it.second.second == asset) {
-            reissuanceToken = it.second.first;
-            entropy = it.first;
-        }
-        if (it.second.first == asset) {
-            throw JSONRPCError(RPC_WALLET_ERROR, "Asset given is a reissuance token type and can not be reissued.");
-        }
-    }
-    if (reissuanceToken.IsNull()) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Asset reissuance token definition could not be found in wallet.");
-    }
-
-    CPubKey newKey;
-    CKeyID keyID;
-    CBitcoinAddress assetAddr;
-    CPubKey assetKey;
-    CBitcoinAddress tokenAddr;
-    CPubKey tokenKey;
-
-    // Add destination for the to-be-created asset
-    if (!pwalletMain->GetKeyFromPool(newKey))
-        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
-    keyID = newKey.GetID();
-    pwalletMain->SetAddressBook(keyID, "", "receive");
-    assetAddr = CBitcoinAddress(keyID);
-    assetKey = pwalletMain->GetBlindingPubKey(GetScriptForDestination(assetAddr.Get()));
-
-    // Add destination for tokens we are moving
-    if (!pwalletMain->GetKeyFromPool(newKey))
-        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
-    keyID = newKey.GetID();
-    pwalletMain->SetAddressBook(keyID, "", "receive");
-    tokenAddr = CBitcoinAddress(keyID);
-    tokenKey = pwalletMain->GetBlindingPubKey(GetScriptForDestination(CTxDestination(keyID)));
-
-    // Attempt a send.
-    CWalletTx wtx;
-    SendGenerationTransaction(GetScriptForDestination(assetAddr.Get()), assetKey, GetScriptForDestination(tokenAddr.Get()), tokenKey, nAmount, -1, true, entropy, asset, reissuanceToken, wtx);
-
-    std::string blinds;
-    for (unsigned int i=0; i<wtx.tx->vout.size(); i++) {
-        blinds += "blind:" + wtx.GetOutputBlindingFactor(i).ToString() + "\n";
-        blinds += "assetblind:" + wtx.GetOutputAssetBlindingFactor(i).ToString() + "\n";
-    }
-
-    UniValue obj(UniValue::VOBJ);
-    obj.push_back(Pair("txid", wtx.tx->GetHash().GetHex()));
-    for (uint64_t i = 0; i < wtx.tx->vin.size(); i++) {
-        if (!wtx.tx->vin[i].assetIssuance.IsNull()) {
-            obj.push_back(Pair("vin", i));
-            blinds += "issuanceblind:" + wtx.GetIssuanceBlindingFactor(i, false).ToString() + "\n";
-            break;
-        }
-    }
-
-    AuditLogPrintf("%s : reissueasset txid:%s\nblinds:\n%s\n", getUser(), wtx.GetHash().GetHex(), blinds);
-
-    return obj;
+    throw JSONRPCError(RPC_MISC_ERROR, "Issuances are disabled on Liquid v1.");
 }
 
 UniValue listissuances(const JSONRPCRequest& request)
