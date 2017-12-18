@@ -325,6 +325,16 @@ class CTTest (BitcoinTestFramework):
         assert_equal(pak1_pegout_txid in self.nodes[i_pak2].getrawmempool(), False)
         assert_equal(pak1_pegout_txid in self.nodes[i_reject].getrawmempool(), False)
 
+        # pak_reject will make a block commitment, causing all validating nodes to dump
+        # the peg transaction
+        self.nodes[i_reject].generate(1)
+        sync_blocks(self.nodes)
+
+        assert_equal(pak1_pegout_txid in self.nodes[i_novalidate].getrawmempool(), True)
+        assert_equal(pak1_pegout_txid in self.nodes[i_undefined].getrawmempool(), False)
+        assert_equal(pak1_pegout_txid in self.nodes[i_pak2].getrawmempool(), False)
+        assert_equal(pak1_pegout_txid in self.nodes[i_reject].getrawmempool(), False)
+
         # Fail to peg-out too-small value
         try:
             self.nodes[i_novalidate].sendtomainchain(Decimal('0.0009'))

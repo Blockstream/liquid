@@ -423,7 +423,7 @@ BOOST_AUTO_TEST_CASE(MempoolAncestorIndexingTest)
     std::vector<CTransactionRef> vtx;
     vtx.push_back(MakeTransactionRef(tx6));
     std::set<std::pair<uint256, COutPoint> > setPeginsSpent;
-    pool.removeForBlock(vtx, 1, setPeginsSpent);
+    pool.removeForBlock(vtx, 1, setPeginsSpent, false);
 
     sortedOrder.erase(sortedOrder.begin()+1);
     // Ties are broken by hash
@@ -567,7 +567,7 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     BOOST_CHECK_EQUAL(pool.GetMinFee(1).GetFeePerK(), maxFeeRateRemoved.GetFeePerK() + 1000);
     // ... we should keep the same min fee until we get a block
     std::set<std::pair<uint256, COutPoint> > setPeginsSpent;
-    pool.removeForBlock(vtx, 1, setPeginsSpent);
+    pool.removeForBlock(vtx, 1, setPeginsSpent, false);
     SetMockTime(42 + 2*CTxMemPool::ROLLING_FEE_HALFLIFE);
     BOOST_CHECK_EQUAL(pool.GetMinFee(1).GetFeePerK(), (maxFeeRateRemoved.GetFeePerK() + 1000)/2);
     // ... then feerate should drop 1/2 each halflife
@@ -638,7 +638,7 @@ BOOST_AUTO_TEST_CASE(WithdrawsSpentTest)
     tx.vout.resize(4);
     tx.vout[3].nValue = 0;
     CTransactionRef txref(MakeTransactionRef(tx));
-    pool.removeForBlock({txref}, 1, setPeginsSpent);
+    pool.removeForBlock({txref}, 1, setPeginsSpent, false);
 
     BOOST_CHECK_EQUAL(pool.size(), 3);
     BOOST_CHECK_EQUAL(pool.mapWithdrawsSpentToTxid.size(), 2);
@@ -650,7 +650,7 @@ BOOST_AUTO_TEST_CASE(WithdrawsSpentTest)
     tx.vout.resize(5);
     tx.vout[4].nValue = 0;
     txref = MakeTransactionRef(tx);
-    pool.removeForBlock({txref}, 2, setPeginsSpent);
+    pool.removeForBlock({txref}, 2, setPeginsSpent, false);
 
     BOOST_CHECK_EQUAL(pool.size(), 2);
     BOOST_CHECK_EQUAL(pool.mapWithdrawsSpentToTxid.size(), 1);
@@ -670,7 +670,7 @@ BOOST_AUTO_TEST_CASE(WithdrawsSpentTest)
     tx.vout.resize(7);
     tx.vout[6].nValue = 0;
     txref = MakeTransactionRef(tx);
-    pool.removeForBlock({txref}, 3, setPeginsSpent);
+    pool.removeForBlock({txref}, 3, setPeginsSpent, false);
 
     BOOST_CHECK_EQUAL(pool.size(), 1);
     BOOST_CHECK(pool.mapWithdrawsSpentToTxid.empty());

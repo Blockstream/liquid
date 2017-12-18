@@ -2814,17 +2814,6 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         if (!pblocktree->WriteTxIndex(vPos))
             return AbortNode(state, "Failed to write transaction index");
 
-    // Get pak commitment from coinbase, if it exists
-    boost::optional<CPAKList> paklist = GetPAKKeysFromCommitment(*block.vtx[0]);
-    if (paklist) {
-        std::vector<std::vector<unsigned char> > offline_keys;
-        std::vector<std::vector<unsigned char> > online_keys;
-        bool is_reject;
-        paklist->ToBytes(offline_keys, online_keys, is_reject);
-        pblocktree->WritePAKList(offline_keys, online_keys, is_reject);
-        g_paklist_blockchain = *paklist;
-    }
-
     // add this block to the view's block chain
     view.SetBestBlock(pindex->GetBlockHash());
 
@@ -3166,8 +3155,20 @@ bool static ConnectTip(CValidationState& state, const CChainParams& chainparams,
         return false;
     int64_t nTime5 = GetTimeMicros(); nTimeChainState += nTime5 - nTime4;
     LogPrint("bench", "  - Writing chainstate: %.2fms [%.2fs]\n", (nTime5 - nTime4) * 0.001, nTimeChainState * 0.000001);
+
+    // Get pak commitment from coinbase, if it exists
+    boost::optional<CPAKList> paklist = GetPAKKeysFromCommitment(*blockConnecting.vtx[0]);
+    if (paklist) {
+        std::vector<std::vector<unsigned char> > offline_keys;
+        std::vector<std::vector<unsigned char> > online_keys;
+        bool is_reject;
+        paklist->ToBytes(offline_keys, online_keys, is_reject);
+        pblocktree->WritePAKList(offline_keys, online_keys, is_reject);
+        g_paklist_blockchain = *paklist;
+    }
+
     // Remove conflicting transactions from the mempool.;
-    mempool.removeForBlock(blockConnecting.vtx, pindexNew->nHeight, setPeginsSpent);
+    mempool.removeForBlock(blockConnecting.vtx, pindexNew->nHeight, setPeginsSpent, (paklist && !g_paklist_config) ? true : false);
     // Update chainActive & related variables.
     UpdateTip(pindexNew, chainparams);
 

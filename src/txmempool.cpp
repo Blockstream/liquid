@@ -6,6 +6,7 @@
 #include "txmempool.h"
 
 #include "clientversion.h"
+#include "chainparams.h"
 #include "consensus/consensus.h"
 #include "consensus/validation.h"
 #include "validation.h"
@@ -606,7 +607,7 @@ void CTxMemPool::removeConflicts(const CTransaction &tx)
  * Called when a block is connected. Removes from mempool and updates the miner fee estimator.
  */
 void CTxMemPool::removeForBlock(const std::vector<CTransactionRef>& vtx, unsigned int nBlockHeight,
-                                const std::set<std::pair<uint256, COutPoint> >& setPeginsSpent)
+                                const std::set<std::pair<uint256, COutPoint> >& setPeginsSpent, bool pak_transition)
 {
     LOCK(cs);
     std::vector<const CTxMemPoolEntry*> entries;
@@ -643,6 +644,25 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef>& vtx, unsigne
             RemoveStaged(stage, true);
             removeRecursive(tx, MemPoolRemovalReason::CONFLICT);
             ClearPrioritisation(it2->second);
+        }
+    }
+    // Eject any newly-invalid peg-outs based on changing block commitment
+    const CChainParams& chainparams = Params();
+    if (pak_transition && !GetBoolArg("-acceptnonstdtxn", !chainparams.RequireStandard())) {
+        for (const auto& entry : mapTx) {
+            for (const auto& out : entry.GetTx().vout) {
+                if (out.scriptPubKey.IsPegoutScript(Params().ParentGenesisBlockHash()) &&
+                            !out.scriptPubKey.HasValidWhitelistPegoutProof(Params().ParentGenesisBlockHash())) {
+                    txiter it = mapTx.find(entry.GetTx().GetHash());
+                    const CTransaction& tx = it->GetTx();
+                    setEntries stage;
+                    stage.insert(it);
+                    RemoveStaged(stage, true, MemPoolRemovalReason::BLOCK);
+                    removeRecursive(tx, MemPoolRemovalReason::BLOCK);
+                    ClearPrioritisation(tx.GetHash());
+                    break;
+                }
+            }
         }
     }
     lastRollingFeeUpdate = GetTime();
