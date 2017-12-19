@@ -2181,21 +2181,42 @@ bool BitcoindRPCCheck(const bool init)
 /* Takes federation redeeem script and adds HMAC_SHA256(pubkey, scriptPubKey) as a tweak to each pubkey */
 CScript calculate_contract(const CScript& federationRedeemScript, const CScript& scriptPubKey) {
     CScript scriptDestination(federationRedeemScript);
-    txnouttype type;
-    std::vector<std::vector<unsigned char> > solutions;
-    // Sanity check fedRedeemScript
-    if (!Solver(federationRedeemScript, type, solutions) || (type != TX_MULTISIG && type != TX_TRUE)) {
-       assert(false);
+
+    // Script is either OP_TRUE or:
+    // OP_DEPTH n+1 OP_EQUAL
+    // OP_IF
+    //     n <...pubkeys...> m
+    // OP_ELSE
+    //     <locktime> OP_CSV OP_DROP n' <pubkey> m'
+    // OP_ENDIF
+    // OP_CHECKMULTISIG
+
+    // Just OP_TRUE is used for testing basic functionality
+    if (scriptDestination == CScript() << OP_TRUE) {
+        return scriptDestination;
     }
 
+    assert(federationRedeemScript.IsWatchmenScript());
+
     {
+        bool if_open = false;
         CScript::iterator sdpc = scriptDestination.begin();
         std::vector<unsigned char> vch;
         opcodetype opcodeTmp;
         while (scriptDestination.GetOp(sdpc, opcodeTmp, vch))
         {
+            if (opcodeTmp == OP_IF) {
+                if_open = true;
+            } else if (opcodeTmp == OP_ELSE) {
+                return scriptDestination;
+            }
+
             if (vch.size() == 33)
             {
+                // Sanity-check, we break as soon as we see the if close
+                if (if_open == false) {
+                    assert(false);
+                }
 
                 unsigned char tweak[32];
                 size_t pub_len = 33;
@@ -2235,8 +2256,8 @@ CScript calculate_contract(const CScript& federationRedeemScript, const CScript&
             }
         }
     }
-
-    return scriptDestination;
+    // Should never reach here
+    assert(false);
 }
 
 bool IsValidPeginWitness(const CScriptWitness& pegin_witness, const COutPoint& prevout) {

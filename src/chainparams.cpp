@@ -243,6 +243,10 @@ public:
         CScript genesisChallengeScript = StrHexToScriptWithDefault(GetArg("-signblockscript", ""), defaultRegtestScript);
         consensus.fedpegScript = StrHexToScriptWithDefault(GetArg("-fedpegscript", ""), defaultRegtestScript);
 
+        if (consensus.fedpegScript != defaultRegtestScript && !consensus.fedpegScript.IsWatchmenScript()) {
+            assert(false);
+        }
+
         strNetworkID = CHAINPARAMS_REGTEST;
         consensus.nSubsidyHalvingInterval = 150;
         consensus.BIP34Height = 100000000; // BIP34 has not activated on regtest (far in the future so block v1 are not rejected in tests)

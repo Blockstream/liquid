@@ -17,6 +17,7 @@
 #include "utilstrencodings.h"
 #include "version.h"
 #include "secp256k1/include/secp256k1_whitelist.h"
+#include "script/interpreter.h"
 #include "util.h"
 #include "chainparams.h"
 
@@ -218,6 +219,66 @@ unsigned int CScript::GetSigOpCount(const CScript& scriptSig) const
     /// ... and return its opcount:
     CScript subscript(data.begin(), data.end());
     return subscript.GetSigOpCount(true);
+}
+
+bool CScript::IsWatchmenScript() const
+{
+    const_iterator pc = begin();
+    std::vector<unsigned char> data;
+    opcodetype opcode;
+    if (!GetOp(pc, opcode, data) || opcode != OP_DEPTH) {
+        return false;
+    }
+    if (!GetOp(pc, opcode, data) || !GetOp(pc, opcode, data) || opcode != OP_EQUAL) {
+        return false;
+    }
+    if (!GetOp(pc, opcode, data) || opcode != OP_IF) {
+        return false;
+    }
+
+    if (!GetOp(pc, opcode, data) || opcode > OP_16 || (opcode < OP_1NEGATE && !CheckMinimalPush(data, opcode))) {
+        return false;
+    }
+    opcodetype opcode2 = opcode;
+    std::vector<unsigned char> num = data;
+
+    while (opcode != OP_ELSE) {
+        if (!GetOp(pc, opcode, data)) {
+            return false;
+        }
+    }
+
+    if (!GetOp(pc, opcode, data)) {
+        return false;
+    }
+
+    if (!GetOp(pc, opcode, data) || opcode != OP_CHECKSEQUENCEVERIFY) {
+        return false;
+    }
+
+    if (!GetOp(pc, opcode, data) || opcode != OP_DROP) {
+        return false;
+    }
+    if (!GetOp(pc, opcode, data) || opcode > OP_16 || (opcode < OP_1NEGATE && !CheckMinimalPush(data, opcode)) ) {
+        return false;
+    }
+
+    // The two numbers must not match, otherwise ELSE branch can not be reached
+    if (opcode == opcode2 && num == data) {
+        return false;
+    }
+
+    while (opcode != OP_ENDIF) {
+        if (!GetOp(pc, opcode, data)) {
+            return false;
+        }
+    }
+
+    if (!GetOp(pc, opcode, data) || opcode != OP_CHECKMULTISIG) {
+        return false;
+    }
+
+    return true;
 }
 
 
