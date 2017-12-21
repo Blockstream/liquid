@@ -248,7 +248,7 @@ bool CScript::IsWatchmenScript() const
         }
     }
 
-    if (!GetOp(pc, opcode, data)) {
+    if (!GetOp(pc, opcode, data) || opcode > OP_16 || (opcode < OP_1NEGATE && !CheckMinimalPush(data, opcode))) {
         return false;
     }
 
