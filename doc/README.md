@@ -16,7 +16,7 @@ The following are some helpful notes on how to run Bitcoin on your native platfo
 Unpack the files into a directory and run:
 
 - `bin/elements-qt` (GUI) or
-- `bin/elementsd` (headless)
+- `bin/liquidd` (headless)
 
 ### Windows
 

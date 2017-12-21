@@ -37,7 +37,7 @@ if ENABLE_ZMQ
 LIBBITCOIN_ZMQ=libbitcoin_zmq.a
 endif
 if BUILD_BITCOIN_LIBS
-LIBBITCOINCONSENSUS=libelementsconsensus.la
+LIBBITCOINCONSENSUS=libliquidconsensus.la
 endif
 if ENABLE_WALLET
 LIBBITCOIN_WALLET=libbitcoin_wallet.a
@@ -66,11 +66,11 @@ TESTS =
 BENCHMARKS =
 
 if BUILD_BITCOIND
-  bin_PROGRAMS += elementsd
+  bin_PROGRAMS += liquidd
 endif
 
 if BUILD_BITCOIN_UTILS
-  bin_PROGRAMS += elements-cli elements-tx
+  bin_PROGRAMS += liquid-cli liquid-tx
 endif
 
 .PHONY: FORCE check-symbols check-security
@@ -385,16 +385,16 @@ nodist_libbitcoin_util_a_SOURCES = $(srcdir)/obj/build.h
 #
 
 # bitcoind binary #
-elementsd_SOURCES = bitcoind.cpp
-elementsd_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-elementsd_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-elementsd_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+liquidd_SOURCES = bitcoind.cpp
+liquidd_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+liquidd_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+liquidd_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-elementsd_SOURCES += bitcoind-res.rc
+liquidd_SOURCES += bitcoind-res.rc
 endif
 
-elementsd_LDADD = \
+liquidd_LDADD = \
   $(LIBBITCOIN_SERVER) \
   $(LIBBITCOIN_COMMON) \
   $(LIBUNIVALUE) \
@@ -407,38 +407,38 @@ elementsd_LDADD = \
   $(LIBMEMENV) \
   $(LIBSECP256K1)
 
-elementsd_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS)
+liquidd_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS)
 
 # bitcoin-cli binary #
-elements_cli_SOURCES = bitcoin-cli.cpp
-elements_cli_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-elements_cli_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-elements_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+liquid_cli_SOURCES = bitcoin-cli.cpp
+liquid_cli_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+liquid_cli_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+liquid_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-elements_cli_SOURCES += bitcoin-cli-res.rc
+liquid_cli_SOURCES += bitcoin-cli-res.rc
 endif
 
-elements_cli_LDADD = \
+liquid_cli_LDADD = \
   $(LIBBITCOIN_CLI) \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_CRYPTO)
 
-elements_cli_LDADD += $(BOOST_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
+liquid_cli_LDADD += $(BOOST_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
 #
 
 # bitcoin-tx binary #
-elements_tx_SOURCES = bitcoin-tx.cpp
-elements_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-elements_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-elements_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+liquid_tx_SOURCES = bitcoin-tx.cpp
+liquid_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+liquid_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+liquid_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-elements_tx_SOURCES += bitcoin-tx-res.rc
+liquid_tx_SOURCES += bitcoin-tx-res.rc
 endif
 
-elements_tx_LDADD = \
+liquid_tx_LDADD = \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_COMMON) \
   $(LIBBITCOIN_UTIL) \
@@ -446,22 +446,22 @@ elements_tx_LDADD = \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBSECP256K1)
 
-elements_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
+liquid_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
 #
 
 # bitcoinconsensus library #
 if BUILD_BITCOIN_LIBS
 include_HEADERS = script/bitcoinconsensus.h
-libelementsconsensus_la_SOURCES = $(crypto_libbitcoin_crypto_a_SOURCES) $(libbitcoin_consensus_a_SOURCES)
+libliquidconsensus_la_SOURCES = $(crypto_libbitcoin_crypto_a_SOURCES) $(libbitcoin_consensus_a_SOURCES)
 
 if GLIBC_BACK_COMPAT
-  libelementsconsensus_la_SOURCES += compat/glibc_compat.cpp
+  libliquidconsensus_la_SOURCES += compat/glibc_compat.cpp
 endif
 
-libelementsconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined -version-info 1:0:0 $(RELDFLAGS)
-libelementsconsensus_la_LIBADD = $(LIBSECP256K1)
-libelementsconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_BITCOIN_INTERNAL
-libelementsconsensus_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libliquidconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined -version-info 1:0:0 $(RELDFLAGS)
+libliquidconsensus_la_LIBADD = $(LIBSECP256K1)
+libliquidconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_BITCOIN_INTERNAL
+libliquidconsensus_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 
 endif
 #
@@ -499,8 +499,8 @@ clean-local:
 	-rm -f config.h
 	-rm -rf test/__pycache__
 
-bitcoind bitcoin-cli bitcoin-tx:
-	@echo "Remember to 'make elements*' rather than 'make bitcoin*' in this repository."
+elementsd elements-cli elements-tx:
+	@echo "Remember to 'make liquid*' rather than 'make bitcoin*' in this repository."
 
 .rc.o:
 	@test -f $(WINDRES)

@@ -117,11 +117,11 @@ try:
     bitcoindstart = sys.argv[1]+"/bitcoind -datadir="+bitcoin_datadir
     subprocess.Popen(bitcoindstart.split(), stdout=subprocess.PIPE)
 
-    sidechainstart = sys.argv[2]+"/elementsd -datadir="+sidechain_datadir + sidechain_args
+    sidechainstart = sys.argv[2]+"/liquidd -datadir="+sidechain_datadir + sidechain_args
     subprocess.Popen(sidechainstart.split(), stdout=subprocess.PIPE)
 
     # Start with invalid fedpegscript
-    sidechain2start = sys.argv[2]+"/elementsd -datadir="+sidechain2_datadir + " -fedpegscript="+bad_fedpeg_script
+    sidechain2start = sys.argv[2]+"/liquidd -datadir="+sidechain2_datadir + " -fedpegscript="+bad_fedpeg_script
     subprocess.Popen(sidechain2start.split(), stdout=subprocess.PIPE)
 
     print("Daemons started")
@@ -139,7 +139,7 @@ try:
         assert(type(e) == NameError)
         pass
 
-    sidechain2start = sys.argv[2]+"/elementsd -datadir="+sidechain2_datadir + sidechain_args
+    sidechain2start = sys.argv[2]+"/liquidd -datadir="+sidechain2_datadir + sidechain_args
     subprocess.Popen(sidechain2start.split(), stdout=subprocess.PIPE)
 
     print("Restarting second sidechain daemon with proper fedpegscript")

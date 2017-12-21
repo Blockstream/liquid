@@ -23,8 +23,8 @@ def startbitcoind(datadir, conf, args=""):
     subprocess.Popen((BITCOINPATH+"/bitcoind -datadir="+datadir+" "+args).split(), stdout=subprocess.PIPE)
     return AuthServiceProxy("http://"+conf["rpcuser"]+":"+conf["rpcpassword"]+"@127.0.0.1:"+conf["rpcport"])
 
-def startelementsd(datadir, conf, args=""):
-    subprocess.Popen((ELEMENTSPATH+"/elementsd  -datadir="+datadir+" "+args).split(), stdout=subprocess.PIPE)
+def startliquidd(datadir, conf, args=""):
+    subprocess.Popen((ELEMENTSPATH+"/liquidd  -datadir="+datadir+" "+args).split(), stdout=subprocess.PIPE)
     return AuthServiceProxy("http://"+conf["rpcuser"]+":"+conf["rpcpassword"]+"@127.0.0.1:"+conf["rpcport"])
 
 def loadConfig(filename):
@@ -70,9 +70,9 @@ e2conf = loadConfig("contrib/assets_tutorial/elements2.conf")
 ## Startup
 
 # Can not start since bitcoind isn't running and validatepegin is set
-# elementsd attempts to connect to bitcoind to check if peg-in transactions
+# liquidd attempts to connect to bitcoind to check if peg-in transactions
 # are confirmed in the Bitcoin chain.
-e1 = startelementsd(e1_datadir, e1conf)
+e1 = startliquidd(e1_datadir, e1conf)
 time.sleep(2)
 try:
     e1.getinfo()
@@ -80,10 +80,10 @@ try:
 except:
     pass
 
-# Start bitcoind, then elementsd. As long as bitcoind is in RPC warmup, elementsd will connect
+# Start bitcoind, then liquidd. As long as bitcoind is in RPC warmup, liquidd will connect
 bitcoin = startbitcoind(b_datadir, bconf)
-e1 = startelementsd(e1_datadir, e1conf)
-e2 = startelementsd(e2_datadir, e2conf)
+e1 = startliquidd(e1_datadir, e1conf)
+e2 = startliquidd(e2_datadir, e2conf)
 
 time.sleep(3)
 
@@ -238,7 +238,7 @@ e1.stop()
 time.sleep(5)
 
 # Restart with a new asset label
-e1 = startelementsd(e1_datadir, e1conf, assetentry)
+e1 = startliquidd(e1_datadir, e1conf, assetentry)
 time.sleep(5)
 
 e1.getwalletinfo()
@@ -323,8 +323,8 @@ os.makedirs(e2_datadir)
 shutil.copyfile("contrib/assets_tutorial/elements1.conf", e1_datadir+"/elements.conf")
 shutil.copyfile("contrib/assets_tutorial/elements2.conf", e2_datadir+"/elements.conf")
 
-e1 = startelementsd(e1_datadir, e1conf, signblockarg)
-e2 = startelementsd(e2_datadir, e2conf, signblockarg)
+e1 = startliquidd(e1_datadir, e1conf, signblockarg)
+e2 = startliquidd(e2_datadir, e2conf, signblockarg)
 time.sleep(5)
 sync_all(e1, e2)
 
@@ -408,8 +408,8 @@ fedpegarg="-fedpegscript=5221"+pubkey1+"21"+pubkey2+"52ae"
 
 # Back to OP_TRUE blocks, re-using pubkeys for pegin pool instead
 # Keys can be the same or different, doesn't matter
-e1 = startelementsd(e1_datadir, e1conf, fedpegarg)
-e2 = startelementsd(e2_datadir, e2conf, fedpegarg)
+e1 = startliquidd(e1_datadir, e1conf, fedpegarg)
+e2 = startliquidd(e2_datadir, e2conf, fedpegarg)
 time.sleep(5)
 
 # Mature some outputs on each side

@@ -61,7 +61,7 @@ Before running, it's recommended you create an RPC configuration file.
 
     chmod 600 "/Users/${USER}/Library/Application Support/Bitcoin/elements.conf"
 
-The first time you run elementsd, it will start downloading the blockchain. This process could take several hours.
+The first time you run liquidd, it will start downloading the blockchain. This process could take several hours.
 
 You can monitor the download process by looking at the debug.log file:
 
@@ -70,7 +70,7 @@ You can monitor the download process by looking at the debug.log file:
 Other commands:
 -------
 
-    ./src/elementsd -daemon # Starts the bitcoin daemon.
+    ./src/liquidd -daemon # Starts the bitcoin daemon.
     ./src/elements-cli --help # Outputs a list of command-line options.
     ./src/elements-cli help # Outputs a list of RPC commands when the daemon is running.
 

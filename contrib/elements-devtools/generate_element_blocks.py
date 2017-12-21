@@ -8,7 +8,7 @@ import argparse
 def sign_block(datadir):
     """
     Gets a new blocks hex, generates a signature for that block,
-    then submits the signed block to the running elementsd
+    then submits the signed block to the running liquidd
     """
     bc=["./elements-cli", "-regtest"]
     if datadir is not None:

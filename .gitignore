@@ -1,13 +1,13 @@
 *.tar.gz
 
 *.exe
-src/elements
-src/elementsd
-src/elements-cli
-src/elements-tx
-src/test/test_elements
-src/qt/test/test_elements-qt
-src/test/test_elements_fuzzy
+src/liquid
+src/liquidd
+src/liquid-cli
+src/liquid-tx
+src/test/test_liquid
+src/qt/test/test_liquid-qt
+src/test/test_liquid_fuzzy
 
 # autoreconf
 Makefile.in
@@ -74,12 +74,12 @@ src/qt/test/moc*.cpp
 # Compilation and Qt preprocessor part
 *.qm
 Makefile
-elements-qt
+liquid-qt
 Elements-Qt.app
 
 # Unit-tests
 Makefile.test
-elements-qt_test
+liquid-qt_test
 src/test/buildenv.py
 
 # Resources cpp
