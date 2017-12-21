@@ -13,6 +13,7 @@
 const std::string CBaseChainParams::MAIN = CHAINPARAMS_OLD_MAIN;
 const std::string CBaseChainParams::REGTEST = CHAINPARAMS_REGTEST;
 const std::string CBaseChainParams::CUSTOM = "custom";
+const std::string CBaseChainParams::LIQUID = CHAINPARAMS_LIQUID;
 
 void AppendParamsHelpMessages(std::string& strUsage, bool debugHelp)
 {
@@ -40,16 +41,16 @@ public:
 };
 
 /**
- * Main network for elements
+ * Main network for Liquid
  */
-class CBaseElementsParams : public CBaseChainParams
+class CBaseLiquidParams : public CBaseChainParams
 {
 public:
-    CBaseElementsParams()
+    CBaseLiquidParams()
     {
-        nRPCPort = 9041;
-        nMainchainRPCPort = 18332;
-        strDataDir = CHAINPARAMS_ELEMENTS;
+        nRPCPort = 10099;
+        nMainchainRPCPort = 8332;
+        strDataDir = CHAINPARAMS_LIQUID;
     }
 };
 
@@ -90,8 +91,8 @@ std::unique_ptr<CBaseChainParams> CreateBaseChainParams(const std::string& chain
 {
     if (chain == CBaseChainParams::MAIN)
         return std::unique_ptr<CBaseChainParams>(new CBaseMainParams());
-    else if (chain == CHAINPARAMS_ELEMENTS)
-        return std::unique_ptr<CBaseChainParams>(new CBaseElementsParams());
+    else if (chain == CHAINPARAMS_LIQUID)
+        return std::unique_ptr<CBaseChainParams>(new CBaseLiquidParams());
     else if (chain == CBaseChainParams::REGTEST)
         return std::unique_ptr<CBaseChainParams>(new CBaseRegTestParams());
     else if (chain == CBaseChainParams::CUSTOM)
@@ -111,5 +112,5 @@ std::string ChainNameFromCommandLine()
         throw std::runtime_error(strprintf("%s: Invalid option -testnet: elements/%s is a testchain too.", __func__, CHAINPARAMS_ELEMENTS));
     if (GetBoolArg("-regtest", false))
         return CBaseChainParams::REGTEST;
-    return GetArg("-chain", CHAINPARAMS_ELEMENTS);
+    return GetArg("-chain", CHAINPARAMS_LIQUID);
 }
