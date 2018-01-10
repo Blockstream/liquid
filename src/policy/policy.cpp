@@ -83,6 +83,10 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason, const bool witnes
             reason = "scriptsig-not-pushonly";
             return false;
         }
+        if (!txin.assetIssuance.IsNull()) {
+            reason = "non-null-issuance";
+            return false;
+        }
     }
 
     unsigned int nDataOut = 0;

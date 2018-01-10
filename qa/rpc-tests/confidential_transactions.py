@@ -480,5 +480,17 @@ class CTTest (BitcoinTestFramework):
         signed = self.nodes[0].signrawtransaction(blinded)
         txid = self.nodes[0].sendrawtransaction(signed["hex"])
 
+        # Test standardness of issuances
+        self.stop_node(1)
+        tx_raw = self.nodes[0].gettransaction(self.nodes[0].issueasset(1, 1)["txid"])["hex"]
+        self.nodes[1] = start_node(1, self.options.tmpdir, ["-acceptnonstdtxn=0"])
+        err_msg = None
+        try:
+            self.nodes[1].sendrawtransaction(tx_raw)
+        except JSONRPCException as e:
+            err_msg = e.error["message"]
+
+        assert_equal(err_msg, "64: non-null-issuance")
+
 if __name__ == '__main__':
     CTTest ().main ()
