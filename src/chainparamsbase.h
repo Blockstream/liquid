@@ -11,7 +11,7 @@
 
 #define CHAINPARAMS_OLD_MAIN "main"
 #define CHAINPARAMS_ELEMENTS "elements"
-#define CHAINPARAMS_REGTEST "elementsregtest"
+#define CHAINPARAMS_REGTEST "liquidregtest"
 #define CHAINPARAMS_LIQUID "liquid"
 
 /**

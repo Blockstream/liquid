@@ -372,7 +372,7 @@ def start_nodes(num_nodes, dirname, extra_args=None, rpchost=None, timewait=None
     return rpcs
 
 def log_filename(dirname, n_node, logname):
-    return os.path.join(dirname, "node"+str(n_node), "elementsregtest", logname)
+    return os.path.join(dirname, "node"+str(n_node), "liquidregtest", logname)
 
 def stop_node(node, i):
     try:

@@ -216,12 +216,12 @@ SIGNBLOCKARG="-signblockscript=5221$(echo $PUBKEY1)21$(echo $PUBKEY2)52ae"
 # Wipe out the chain and wallet to get funds with new genesis block
 # You can not swap out blocksigner sets as of now for security reasons,
 # so we start fresh on a new chain.
-rm -r ~/liquiddir1/elementsregtest/blocks
-rm -r ~/liquiddir1/elementsregtest/chainstate
-rm ~/liquiddir1/elementsregtest/wallet.dat
-rm -r ~/liquiddir2/elementsregtest/blocks
-rm -r ~/liquiddir2/elementsregtest/chainstate
-rm ~/liquiddir2/elementsregtest/wallet.dat
+rm -r ~/liquiddir1/liquidregtest/blocks
+rm -r ~/liquiddir1/liquidregtest/chainstate
+rm ~/liquiddir1/liquidregtest/wallet.dat
+rm -r ~/liquiddir2/liquidregtest/blocks
+rm -r ~/liquiddir2/liquidregtest/chainstate
+rm ~/liquiddir2/liquidregtest/wallet.dat
 
 e1-dae $SIGNBLOCKARG
 e2-dae $SIGNBLOCKARG
@@ -286,12 +286,12 @@ e2-cli stop
 # important as there is no going back if you lose the funds.
 
 # Wipe out the chain and wallet to get funds with new genesis block
-rm -r ~/liquiddir1/elementsregtest/blocks
-rm -r ~/liquiddir1/elementsregtest/chainstate
-rm ~/liquiddir1/elementsregtest/wallet.dat
-rm -r ~/liquiddir2/elementsregtest/blocks
-rm -r ~/liquiddir2/elementsregtest/chainstate
-rm ~/liquiddir2/elementsregtest/wallet.dat
+rm -r ~/liquiddir1/liquidregtest/blocks
+rm -r ~/liquiddir1/liquidregtest/chainstate
+rm ~/liquiddir1/liquidregtest/wallet.dat
+rm -r ~/liquiddir2/liquidregtest/blocks
+rm -r ~/liquiddir2/liquidregtest/chainstate
+rm ~/liquiddir2/liquidregtest/wallet.dat
 
 FEDPEGARG="-fedpegscript=5221$(echo $PUBKEY1)21$(echo $PUBKEY2)52ae"
 
