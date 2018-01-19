@@ -19,9 +19,9 @@ shopt -s expand_aliases
 ELEMENTSPATH="."
 BITCOINPATH="."
 
-alias e1-cli="$ELEMENTSPATH/elements-cli -datadir=$HOME/liquiddir1"
+alias e1-cli="$ELEMENTSPATH/liquid-cli -datadir=$HOME/liquiddir1"
 alias e1-dae="$ELEMENTSPATH/liquidd -datadir=$HOME/liquiddir1"
-alias e2-cli="$ELEMENTSPATH/elements-cli -datadir=$HOME/liquiddir2"
+alias e2-cli="$ELEMENTSPATH/liquid-cli -datadir=$HOME/liquiddir2"
 alias e2-dae="$ELEMENTSPATH/liquidd -datadir=$HOME/liquiddir2"
 
 alias b-cli="$BITCOINPATH/bitcoin-cli -datadir=$HOME/bitcoindir"
