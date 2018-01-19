@@ -60,8 +60,8 @@ os.makedirs(e2_datadir)
 # Also configure the nodes by copying the configuration files from
 # this directory (and read them back for arguments):
 shutil.copyfile("contrib/assets_tutorial/bitcoin.conf", b_datadir+"/bitcoin.conf")
-shutil.copyfile("contrib/assets_tutorial/elements1.conf", e1_datadir+"/elements.conf")
-shutil.copyfile("contrib/assets_tutorial/elements2.conf", e2_datadir+"/elements.conf")
+shutil.copyfile("contrib/assets_tutorial/elements1.conf", e1_datadir+"/liquid.conf")
+shutil.copyfile("contrib/assets_tutorial/elements2.conf", e2_datadir+"/liquid.conf")
 
 bconf = loadConfig("contrib/assets_tutorial/bitcoin.conf")
 e1conf = loadConfig("contrib/assets_tutorial/elements1.conf")
@@ -228,7 +228,7 @@ e1.issueasset(0, 1, False)
 # Then two issuances for that particular asset will show
 e1.listissuances(asset)
 
-# To label any asset add a new argument like this to your elements.conf file
+# To label any asset add a new argument like this to your liquid.conf file
 # then restart your daemon:
 assetentry = "-assetdir="+asset+":namedasset"
 # Wallet labels have no consensus meaning, only local node/wallet meaning
@@ -320,8 +320,8 @@ os.makedirs(e1_datadir)
 os.makedirs(e2_datadir)
 
 # Copy back config files
-shutil.copyfile("contrib/assets_tutorial/elements1.conf", e1_datadir+"/elements.conf")
-shutil.copyfile("contrib/assets_tutorial/elements2.conf", e2_datadir+"/elements.conf")
+shutil.copyfile("contrib/assets_tutorial/elements1.conf", e1_datadir+"/liquid.conf")
+shutil.copyfile("contrib/assets_tutorial/elements2.conf", e2_datadir+"/liquid.conf")
 
 e1 = startliquidd(e1_datadir, e1conf, signblockarg)
 e2 = startliquidd(e2_datadir, e2conf, signblockarg)
@@ -401,8 +401,8 @@ os.makedirs(e1_datadir)
 os.makedirs(e2_datadir)
 
 # Copy back config files
-shutil.copyfile("contrib/assets_tutorial/elements1.conf", e1_datadir+"/elements.conf")
-shutil.copyfile("contrib/assets_tutorial/elements2.conf", e2_datadir+"/elements.conf")
+shutil.copyfile("contrib/assets_tutorial/elements1.conf", e1_datadir+"/liquid.conf")
+shutil.copyfile("contrib/assets_tutorial/elements2.conf", e2_datadir+"/liquid.conf")
 
 fedpegarg="-fedpegscript=5221"+pubkey1+"21"+pubkey2+"52ae"
 

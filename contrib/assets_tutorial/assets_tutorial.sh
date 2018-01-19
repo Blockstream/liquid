@@ -9,8 +9,8 @@ mkdir ~/bitcoindir ; mkdir ~/liquiddir1 ; mkdir ~/liquiddir2
 # Also configure the nodes by copying the configuration files from
 # this directory (and read them):
 cp ./contrib/assets_tutorial/bitcoin.conf ~/bitcoindir/bitcoin.conf
-cp ./contrib/assets_tutorial/elements1.conf ~/liquiddir1/elements.conf
-cp ./contrib/assets_tutorial/elements2.conf ~/liquiddir2/elements.conf
+cp ./contrib/assets_tutorial/elements1.conf ~/liquiddir1/liquid.conf
+cp ./contrib/assets_tutorial/elements2.conf ~/liquiddir2/liquid.conf
 
 # Set some aliases:
 cd src
@@ -157,7 +157,7 @@ e1-cli issueasset 0 1 false
 # Then two issuances for that particular asset will show
 e1-cli listissuances $ASSET
 
-# To label the asset add this to your elements.conf file then restart your daemon:
+# To label the asset add this to your liquid.conf file then restart your daemon:
 # assetdir=$ASSET:yourlabelhere
 # It really doesn't matter what you call it, labels are local things only.
 
