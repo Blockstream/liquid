@@ -394,8 +394,11 @@ public:
         consensus.hashGenesisBlock = genesis.GetHash();
 
 
-        //TODO replace with multisig, same as CSV emergency clause
-        scriptCoinbaseDestination = CScript(); // Allow any coinbase destination
+        std::vector<unsigned char> coinbase_script_bytes(ParseHex("522102aef2b8a39966d49183fdddaefdc75af6d81ea6d16f7aba745cc4855e88f830842102141d452c3deeb937efff9f3378cd50bbde0543b77bbc6df6fc0e0addbf5578c52103948d24a9622cb14b198aed0739783d7c03d74c32c05780a86b43429c65679def53ae"));
+        CScript raw_multisig(coinbase_script_bytes.begin(), coinbase_script_bytes.end());
+        uint160 script_id(Hash160(raw_multisig.begin(), raw_multisig.end()));
+        // same as CSV emergency clause for mainnet, 2 of 3 multisig
+        scriptCoinbaseDestination = CScript() << OP_HASH160 << std::vector<unsigned char>(script_id.begin(), script_id.end()) << OP_EQUAL;
 
         vFixedSeeds.clear();
         vSeeds.clear();
