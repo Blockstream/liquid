@@ -28,7 +28,7 @@ from .authproxy import AuthServiceProxy, JSONRPCException
 
 COVERAGE_DIR = None
 
-BITCOIN_ASSET = bytearray.fromhex("b2e15d0d7a0c94e4e2ce0fe6e8691b9e451377f6e46e8045a86f7c4b5d4f0f23")
+BITCOIN_ASSET = bytearray.fromhex("5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225")
 BITCOIN_ASSET.reverse()
 BITCOIN_ASSET_OUT = b"\x01"+BITCOIN_ASSET
 
