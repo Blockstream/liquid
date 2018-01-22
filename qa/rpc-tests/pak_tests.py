@@ -14,7 +14,7 @@ def pak_to_option(pak):
 # 'reject' and finally to pak2. There are 5 nodes each with different
 # configurations
 # All nodes validate pegouts but the first one
-args = [["-acceptnonstdtxn=0", "-validatepegout=0"]] + [["-validatepegout=1", "-acceptnonstdtxn=0"]]*4
+args = [["-acceptnonstdtxn=1"]] + [["-acceptnonstdtxn=0"]]*4
 # The node at index 0 doesn't validate pegouts
 i_novalidate = 0
 # The node at index 1 has no paklist in config
@@ -97,7 +97,6 @@ class CTTest (BitcoinTestFramework):
                     assert_equal(actual['reject'], False)
             compare(getpakinfo['config_paklist'], config_pak)
             compare(getpakinfo['block_paklist'], block_pak)
-            assert_equal(validate, getpakinfo["validate_pegout"])
 
         # In the beginning the blockchain paklist is "reject"
         empty_pak = []

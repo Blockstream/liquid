@@ -22,6 +22,7 @@
 #include "util.h"
 #include "utilstrencodings.h"
 #include "validationinterface.h"
+#include "policy/policy.h"
 
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h"
@@ -336,13 +337,13 @@ std::string gbt_vb_name(const Consensus::DeploymentPos pos) {
 
 UniValue testproposedblock(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() != 1)
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw std::runtime_error(
             "testproposedblock \"blockhex\" ( enforce_pegout )\n"
             "\nChecks a block proposal for validity, and that it extends chaintip\n"
             "\nArguments:\n"
             "1. \"blockhex\"    (string, required) The hex-encoded block from getnewblockhex\n"
-            "2. \"enforce_pegout\" (bool, default=true) Checks pegout authorization list commitments and pegoutproofs. This is only enforced when validatepegout is set.\n"
+            "2. \"acceptnonstd\" (bool, optional) If set false, returns error if block contains non-standard transaction, or block PAK commitment mismatch is detected. Defaults are set via `-acceptnonstdtxn`.\n"
             "\nResult\n"
             "\nExamples:\n"
             + HelpExampleCli("testproposedblock", "<hex>")
@@ -372,9 +373,8 @@ UniValue testproposedblock(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_VERIFY_ERROR, strRejectReason);
     }
 
-    // Lastly, check pegout proof information
-    if (GetBoolArg("-validatepegout", DEFAULT_VALIDATE_PEGOUT) &&
-            (request.params.size() == 1 || request.params[1].get_bool() == true)) {
+    const CChainParams& chainparams = Params();
+    if ((request.params[1].isNull() && !GetBoolArg("-acceptnonstdtxn", !chainparams.RequireStandard())) || (!request.params[1].isNull() && !request.params[1].get_bool())) {
 
         // Check to see if block commitment matches the expected one
         boost::optional<CPAKList> paklist_block = GetPAKKeysFromCommitment(*block.vtx[0]);
@@ -392,20 +392,13 @@ UniValue testproposedblock(const JSONRPCRequest& request)
             }
         }
 
-        // Check if pegouts are allowed and have proper authorization
-        for (unsigned int i = 0; i < block.vtx.size(); i++) {
-            const CTransaction& tx = *block.vtx[i];
-            for (unsigned int j = 0; j < tx.vout.size(); j++) {
-                const CScript& scriptPubKey = tx.vout[j].scriptPubKey;
-                if (scriptPubKey.IsPegoutScript(Params().ParentGenesisBlockHash())) {
-                    // This checks against the pak list loaded from the conf file
-                    // or from the block list if no conf settings are set
-                    if (!scriptPubKey.HasValidWhitelistPegoutProof(Params().ParentGenesisBlockHash())) {
-                        throw JSONRPCError(RPC_VERIFY_ERROR, "Proposal has invalid PAK proof.");
-                    }
-                }
+        for (auto& transaction : block.vtx) {
+            std::string reason;
+            if (!IsStandardTx(*transaction, reason)) {
+                throw JSONRPCError(RPC_VERIFY_ERROR, "Block proposal included a non-standard transaction: " + reason);
             }
         }
+
     }
 
     return NullUniValue;
@@ -1031,7 +1024,7 @@ static const CRPCCommand commands[] =
     { "mining",             "prioritisetransaction",  &prioritisetransaction,  true,  {"txid","priority_delta","fee_delta"} },
     { "mining",             "getblocktemplate",       &getblocktemplate,       true,  {"template_request"} },
     { "mining",             "submitblock",            &submitblock,            true,  {"hexdata","parameters"} },
-    { "mining",             "testproposedblock",      &testproposedblock,      true,  {} },
+    { "mining",             "testproposedblock",      &testproposedblock,      true,  {"blockhex", "acceptnonstd"} },
 
     { "generating",         "generate",               &generate,               true,  {"nblocks","maxtries"} },
     { "generating",         "combineblocksigs",       &combineblocksigs,       true,  {} },

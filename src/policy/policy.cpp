@@ -96,11 +96,11 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason, const bool witnes
             return false;
         }
 
+        // Check for valid peg-out proof
         if (whichType == TX_NULL_DATA) {
-            if ((GetBoolArg("-validatepegout", DEFAULT_VALIDATE_PEGOUT) &&
-                txout.scriptPubKey.IsPegoutScript(Params().ParentGenesisBlockHash()) &&
+            if (txout.scriptPubKey.IsPegoutScript(Params().ParentGenesisBlockHash()) &&
                 (!txout.scriptPubKey.HasValidWhitelistPegoutProof(Params().ParentGenesisBlockHash())
-                 || !txout.nAsset.IsExplicit() || !txout.nValue.IsExplicit()))) {
+                 || !txout.nAsset.IsExplicit() || !txout.nValue.IsExplicit())) {
                 return false;
             }
         }
