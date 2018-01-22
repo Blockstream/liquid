@@ -57,11 +57,11 @@ Element is now available at `./src/elements`
 
 Before running, it's recommended you create an RPC configuration file.
 
-    echo -e "rpcuser=bitcoinrpc\nrpcpassword=$(xxd -l 16 -p /dev/urandom)" > "/Users/${USER}/Library/Application Support/Bitcoin/elements.conf"
+    echo -e "rpcuser=bitcoinrpc\nrpcpassword=$(xxd -l 16 -p /dev/urandom)" > "/Users/${USER}/Library/Application Support/Bitcoin/liquid.conf"
 
-    chmod 600 "/Users/${USER}/Library/Application Support/Bitcoin/elements.conf"
+    chmod 600 "/Users/${USER}/Library/Application Support/Bitcoin/liquid.conf"
 
-The first time you run elementsd, it will start downloading the blockchain. This process could take several hours.
+The first time you run liquidd, it will start downloading the blockchain. This process could take several hours.
 
 You can monitor the download process by looking at the debug.log file:
 
@@ -70,7 +70,7 @@ You can monitor the download process by looking at the debug.log file:
 Other commands:
 -------
 
-    ./src/elementsd -daemon # Starts the bitcoin daemon.
+    ./src/liquidd -daemon # Starts the bitcoin daemon.
     ./src/elements-cli --help # Outputs a list of command-line options.
     ./src/elements-cli help # Outputs a list of RPC commands when the daemon is running.
 

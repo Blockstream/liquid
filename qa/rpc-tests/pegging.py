@@ -66,7 +66,7 @@ with open(os.path.join(bitcoin_datadir, "bitcoin.conf"), 'w') as f:
         f.write("daemon=1\n")
         f.write("listen=0\n")
 
-with open(os.path.join(sidechain_datadir, "elements.conf"), 'w') as f:
+with open(os.path.join(sidechain_datadir, "liquid.conf"), 'w') as f:
         f.write("regtest=1\n")
         f.write("rpcuser=sidechainrpc\n")
         f.write("rpcpassword="+sidechain_pass+"\n")
@@ -86,7 +86,7 @@ with open(os.path.join(sidechain_datadir, "elements.conf"), 'w') as f:
         f.write("connect=localhost:"+str(sidechain2_p2p_port)+"\n")
         f.write("listen=1\n")
 
-with open(os.path.join(sidechain2_datadir, "elements.conf"), 'w') as f:
+with open(os.path.join(sidechain2_datadir, "liquid.conf"), 'w') as f:
         f.write("regtest=1\n")
         f.write("rpcuser=sidechainrpc2\n")
         f.write("rpcpassword="+sidechain2_pass+"\n")
@@ -117,11 +117,11 @@ try:
     bitcoindstart = sys.argv[1]+"/bitcoind -datadir="+bitcoin_datadir
     subprocess.Popen(bitcoindstart.split(), stdout=subprocess.PIPE)
 
-    sidechainstart = sys.argv[2]+"/elementsd -datadir="+sidechain_datadir + sidechain_args
+    sidechainstart = sys.argv[2]+"/liquidd -datadir="+sidechain_datadir + sidechain_args
     subprocess.Popen(sidechainstart.split(), stdout=subprocess.PIPE)
 
     # Start with invalid fedpegscript
-    sidechain2start = sys.argv[2]+"/elementsd -datadir="+sidechain2_datadir + " -fedpegscript="+bad_fedpeg_script
+    sidechain2start = sys.argv[2]+"/liquidd -datadir="+sidechain2_datadir + " -fedpegscript="+bad_fedpeg_script
     subprocess.Popen(sidechain2start.split(), stdout=subprocess.PIPE)
 
     print("Daemons started")
@@ -139,7 +139,7 @@ try:
         assert(type(e) == NameError)
         pass
 
-    sidechain2start = sys.argv[2]+"/elementsd -datadir="+sidechain2_datadir + sidechain_args
+    sidechain2start = sys.argv[2]+"/liquidd -datadir="+sidechain2_datadir + sidechain_args
     subprocess.Popen(sidechain2start.split(), stdout=subprocess.PIPE)
 
     print("Restarting second sidechain daemon with proper fedpegscript")
