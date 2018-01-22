@@ -12,6 +12,7 @@
 #define CHAINPARAMS_OLD_MAIN "main"
 #define CHAINPARAMS_ELEMENTS "elements"
 #define CHAINPARAMS_REGTEST "elementsregtest"
+#define CHAINPARAMS_LIQUID "liquid"
 
 /**
  * CBaseChainParams defines the base parameters (shared between bitcoin-cli and bitcoind)
@@ -23,6 +24,7 @@ public:
     static const std::string MAIN;
     static const std::string REGTEST;
     static const std::string CUSTOM;
+    static const std::string LIQUID;
 
     const std::string& DataDir() const { return strDataDir; }
     int RPCPort() const { return nRPCPort; }

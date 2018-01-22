@@ -331,6 +331,108 @@ public:
 };
 
 /**
+ * Liquid Beta 0.9
+ */
+class CLiquidParams : public CChainParams {
+public:
+    CLiquidParams() {
+        CScript defaultSignblockScript;
+        CScript genesisChallengeScript = StrHexToScriptWithDefault(GetArg("-signblockscript", ""), defaultSignblockScript);
+        CScript defaultFedpegScript;
+        consensus.fedpegScript = StrHexToScriptWithDefault(GetArg("-fedpegscript", ""), defaultFedpegScript);
+
+        if (!consensus.fedpegScript.IsWatchmenScript()) {
+            bool sad = false;
+            assert("fedpegscript is invalid for Liquid Beta" && sad);
+        }
+
+        strNetworkID = CHAINPARAMS_LIQUID;
+        consensus.nSubsidyHalvingInterval = 150;
+        consensus.BIP34Hash = uint256();
+        consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        consensus.parentChainPowLimit = uint256S("0000000000000000ffffffffffffffffffffffffffffffffffffffffffffffff");
+        consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
+        consensus.nPowTargetSpacing = 1 * 60;
+        consensus.fPowAllowMinDifficultyBlocks = true;
+        consensus.fPowNoRetargeting = true;
+        consensus.nRuleChangeActivationThreshold = 108; // 75% for testchains
+        consensus.nMinerConfirmationWindow = 144; // Faster than normal for regtest (144 instead of 2016)
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 0;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 999999999999ULL;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].bit = 0;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nStartTime = 0;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 999999999999ULL;
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].bit = 1;
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = 0;
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 999999999999ULL;
+
+        // The best chain should have at least this much work.
+        consensus.nMinimumChainWork = uint256S("0x00");
+
+        // By default assume that the signatures in ancestors of this block are valid.
+        consensus.defaultAssumeValid = uint256S("0x00");
+
+        pchMessageStart[0] = 0xfa;
+        pchMessageStart[1] = 0xbf;
+        pchMessageStart[2] = 0xb5;
+        pchMessageStart[3] = 0xdb;
+        nDefaultPort = 10100;
+        nPruneAfterHeight = 1000;
+
+        parentGenesisBlockHash = uint256S("000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f");
+
+        // Generate pegged Bitcoin asset
+        std::vector<unsigned char> commit = CommitToArguments(consensus, strNetworkID, genesisChallengeScript);
+        uint256 entropy;
+        GenerateAssetEntropy(entropy,  COutPoint(uint256(commit), 0), parentGenesisBlockHash);
+        CalculateAsset(consensus.pegged_asset, entropy);
+
+        genesis = CreateGenesisBlock(consensus, strNetworkID, 1296688602, genesisChallengeScript, 1);
+        // Single "issuance" of only bitcoin
+        AppendInitialIssuance(genesis, COutPoint(uint256(commit), 0), parentGenesisBlockHash, 1, 0, 0, 0, CScript() << OP_TRUE);
+        consensus.hashGenesisBlock = genesis.GetHash();
+
+
+        std::vector<unsigned char> coinbase_script_bytes(ParseHex("522102aef2b8a39966d49183fdddaefdc75af6d81ea6d16f7aba745cc4855e88f830842102141d452c3deeb937efff9f3378cd50bbde0543b77bbc6df6fc0e0addbf5578c52103948d24a9622cb14b198aed0739783d7c03d74c32c05780a86b43429c65679def53ae"));
+        CScript raw_multisig(coinbase_script_bytes.begin(), coinbase_script_bytes.end());
+        uint160 script_id(Hash160(raw_multisig.begin(), raw_multisig.end()));
+        // same as CSV emergency clause for mainnet, 2 of 3 multisig
+        scriptCoinbaseDestination = CScript() << OP_HASH160 << std::vector<unsigned char>(script_id.begin(), script_id.end()) << OP_EQUAL;
+
+        vFixedSeeds.clear();
+        vSeeds.clear();
+
+        fMiningRequiresPeers = false;
+        fDefaultConsistencyChecks = true;
+        fRequireStandard = true;
+        fMineBlocksOnDemand = false;
+        anyonecanspend_aremine = false;
+
+        checkpointData = (CCheckpointData){
+            boost::assign::map_list_of
+            (     0, consensus.hashGenesisBlock),
+        };
+
+        chainTxData = ChainTxData{
+            0,
+            0,
+            0
+        };
+        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,57);
+        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,39);
+        base58Prefixes[BLINDED_ADDRESS]= std::vector<unsigned char>(1,12);
+        base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,128);
+        base58Prefixes[EXT_PUBLIC_KEY] = boost::assign::list_of(0x04)(0x88)(0xB2)(0x1E).convert_to_container<std::vector<unsigned char> >();
+        base58Prefixes[EXT_SECRET_KEY] = boost::assign::list_of(0x04)(0x88)(0xAD)(0xE4).convert_to_container<std::vector<unsigned char> >();
+
+        base58Prefixes[PARENT_PUBKEY_ADDRESS] = std::vector<unsigned char>(1,0);
+        base58Prefixes[PARENT_SCRIPT_ADDRESS] = std::vector<unsigned char>(1,5);
+    }
+};
+
+
+/**
  * Custom params for testing.
  */
 class CCustomParams : public CChainParams {
@@ -401,8 +503,8 @@ public:
 
 const std::vector<std::string> CChainParams::supportedChains =
     boost::assign::list_of
-    ( CHAINPARAMS_ELEMENTS )
     ( CHAINPARAMS_REGTEST )
+    ( CHAINPARAMS_LIQUID )
     ;
 
 static std::unique_ptr<CChainParams> globalChainParams;
@@ -416,12 +518,12 @@ std::unique_ptr<CChainParams> CreateChainParams(const std::string& chain)
 {
     if (chain == CBaseChainParams::MAIN)
         return std::unique_ptr<CChainParams>(new CMainParams());
-    else if (chain == CHAINPARAMS_ELEMENTS)
-        return std::unique_ptr<CChainParams>(new CElementsParams());
     else if (chain == CBaseChainParams::REGTEST)
         return std::unique_ptr<CChainParams>(new CRegTestParams());
     else if (chain == CBaseChainParams::CUSTOM) {
         return std::unique_ptr<CChainParams>(new CCustomParams());
+    } else if (chain == CBaseChainParams::LIQUID) {
+        return std::unique_ptr<CChainParams>(new CLiquidParams());
     }
     throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
 }
