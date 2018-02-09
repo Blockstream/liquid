@@ -28,7 +28,7 @@ packages:
 - "ca-certificates"
 - "python"
 remotes:
--  "url": "https://gl.blockstream.io/liquid/liquid-daemon.git"
+- "url": "https://gl.blockstream.io/liquid/liquid-daemon.git"
   "dir": "liquid"
 files: []
 script: |
@@ -83,7 +83,6 @@ script: |
   create_global_faketime_wrappers "2000-01-01 12:00:00"
   create_per-host_faketime_wrappers "2000-01-01 12:00:00"
   export PATH=${WRAP_DIR}:${PATH}
-  cd liquid
 
   EXTRA_INCLUDES_BASE=$WRAP_DIR/extra_includes
   mkdir -p $EXTRA_INCLUDES_BASE
@@ -114,6 +113,7 @@ script: |
   chmod +x ${WRAP_DIR}/${prog}
   done
 
+  cd liquid
   BASEPREFIX=`pwd`/depends
   # Build dependencies for each host
   for i in $HOSTS; do
