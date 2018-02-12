@@ -28,7 +28,7 @@ packages:
 - "ca-certificates"
 - "python"
 remotes:
-- "url": "https://gl.blockstream.io/liquid/liquid-daemon.git"
+- "url": "git@github.com:bitcoin/bitcoin.git"
   "dir": "liquid"
 files: []
 script: |
