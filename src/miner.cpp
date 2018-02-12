@@ -142,7 +142,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     std::vector<CScript> commitments;
 
     // Create block pak commitment if set in conf file and validating pegouts
-    if (GetBoolArg("-validatepegout", DEFAULT_VALIDATE_PEGOUT) && g_paklist_config) {
+    if (!GetBoolArg("-acceptnonstdtxn", !Params().RequireStandard()) && g_paklist_config) {
         if (*g_paklist_config != g_paklist_blockchain) {
             g_paklist_config->CreateCommitments(commitments);
         }

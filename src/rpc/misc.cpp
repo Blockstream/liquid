@@ -616,7 +616,6 @@ UniValue getpakinfo(const JSONRPCRequest& request)
             "{\n"
                 "\"paklist\"          (dict) The PAK list loaded from beta.conf at startup\n"
                 "\"block_paklist\"    (dict) The PAK list loaded from latest block commitment\n"
-                "\"validate_pegout\"  (bool) If pegouts are being validated by the client\n"
                 "\"derivation_path\"  (string) The next index to be used by the wallet for `sendtomainchain`.\n"
                 "\"bitcoin_xpub\"     (string) The Bitcoin xpubkey loaded in the wallet for pegouts.\n"
                 "\"liquid_pak\"       (string) Pubkey in hex corresponding to the Liquid PAK loaded in the wallet for pegouts.\n"
@@ -642,8 +641,6 @@ UniValue getpakinfo(const JSONRPCRequest& request)
     }
     ret.push_back(Pair("config_paklist", paklist_value));
     ret.push_back(Pair("block_paklist", FormatPAKList(g_paklist_blockchain)));
-
-    ret.push_back(Pair("validate_pegout", GetBoolArg("-validatepegout", DEFAULT_VALIDATE_PEGOUT)));
 
 #ifdef ENABLE_WALLET
     if (pwalletMain && pwalletMain->offline_counter != -1) {
