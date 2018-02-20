@@ -86,7 +86,7 @@ UniValue CallRPC(const std::string& strMethod, const UniValue& params, bool conn
     int port = GetArg(strport, BaseParams().RPCPort());
 
     if (connectToMainchain) {
-        strhost = "-mainchainhost";
+        strhost = "-mainchainrpchost";
         strport = "-mainchainrpcport";
         strpassword = "-mainchainrpcpassword";
         struser = "-mainchainrpcuser";
@@ -111,7 +111,7 @@ UniValue CallRPC(const std::string& strMethod, const UniValue& params, bool conn
 
     // Get credentials
     std::string strRPCUserColonPass;
-    if (GetArg("-rpcpassword", "") == "") {
+    if (GetArg(strpassword, "") == "") {
 
         // Try fall back to cookie-based authentication if no password is provided
         if (!connectToMainchain && !GetAuthCookie(&strRPCUserColonPass)) {

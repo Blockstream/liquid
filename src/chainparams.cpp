@@ -117,7 +117,7 @@ public:
         defaultFedpegScript = CScript() << OP_2 << ParseHex("02d51090b27ca8f1cc04984614bd749d8bab6f2a3681318d3fd0dd43b2a39dd774") << ParseHex("03a75bd7ac458b19f98047c76a6ffa442e592148c5d23a1ec82d379d5d558f4fd8") << ParseHex("034c55bede1bce8e486080f8ebb7a0e8f106b49efb295a8314da0e1b1723738c66") << OP_3 << OP_CHECKMULTISIG;
         consensus.fedpegScript = StrHexToScriptWithDefault(GetArg("-fedpegscript", ""), defaultFedpegScript);
 
-        strNetworkID = CHAINPARAMS_ELEMENTS;
+        strNetworkID = CHAINPARAMS_OLD_MAIN;
         consensus.nSubsidyHalvingInterval = 210000;
         consensus.BIP34Height = 227931;
         consensus.BIP34Hash = uint256S("0x000000000000024b89b42a942fe0d9fea3bb44ab7bd1b19115dd6a759c0808b8");
