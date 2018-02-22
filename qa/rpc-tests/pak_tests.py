@@ -330,7 +330,7 @@ class CTTest (BitcoinTestFramework):
             self.nodes[i_novalidate].sendtomainchain(Decimal('0.0009'))
         except JSONRPCException as e:
             errorString = e.error['message']
-        assert_equal("Invalid amount for send, must send more than 1 millibit" in errorString, True)
+        assert_equal("Invalid amount for send, must send more than 0.0001 BTC" in errorString, True)
         errorString = ""
 
         # Use wrong network's extended pubkey

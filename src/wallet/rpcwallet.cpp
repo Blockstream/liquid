@@ -3843,7 +3843,7 @@ UniValue sendtomainchain(const JSONRPCRequest& request)
     //amount
     CAmount nAmount = AmountFromValue(request.params[0]);
     if (nAmount < 100000)
-        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for send, must send more than 1 millibit");
+        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for send, must send more than 0.0001 BTC");
 
     CPAKList paklist = g_paklist_blockchain;
     if (g_paklist_config) {
@@ -4023,7 +4023,7 @@ UniValue sendtomainchainmanual(const JSONRPCRequest& request)
 
     CAmount nAmount = AmountFromValue(request.params[1]);
     if (nAmount < 100000)
-        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for send, must send more than 1 millibit");
+        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for send, must send more than 0.0001 BTC");
 
     if (!IsHex(request.params[2].get_str()))
         throw JSONRPCError(RPC_TYPE_ERROR, "pegoutproof must be hex");
