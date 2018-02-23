@@ -1,6 +1,7 @@
 #!/usr/bin/env python2
 
 from test_framework.authproxy import AuthServiceProxy, JSONRPCException
+from decimal import Decimal
 import os
 import random
 import sys
@@ -112,6 +113,7 @@ with open(os.path.join(sidechain_datadir, "liquid.conf"), 'w') as f:
         f.write("port="+str(sidechain1_p2p_port)+"\n")
         f.write("connect=localhost:"+str(sidechain2_p2p_port)+"\n")
         f.write("listen=1\n")
+        f.write("fallbackfee=0.00001\n")
 
 with open(os.path.join(sidechain2_datadir, "liquid.conf"), 'w') as f:
         f.write("regtest=1\n")
@@ -131,6 +133,7 @@ with open(os.path.join(sidechain2_datadir, "liquid.conf"), 'w') as f:
         f.write("port="+str(sidechain2_p2p_port)+"\n")
         f.write("connect=localhost:"+str(sidechain1_p2p_port)+"\n")
         f.write("listen=1\n")
+        f.write("fallbackfee=0.00001\n")
 
 try:
 
@@ -233,6 +236,12 @@ try:
     decoded = sidechain.decoderawtransaction(tx1["hex"])
     assert decoded["vin"][0]["is_pegin"] == True
     assert len(decoded["vin"][0]["pegin_witness"]) > 0
+    # Check that there's sufficient fee for the peg-in
+    vsize = decoded["vsize"]
+    fee_output = decoded["vout"][1]
+    fallbackfee_pervbyte = Decimal("0.00001")/Decimal("1000")
+    assert fee_output["scriptPubKey"]["type"] == "fee"
+    assert fee_output["value"] >= fallbackfee_pervbyte*vsize
 
     # Quick reorg checks of pegs
     sidechain.invalidateblock(blockhash[0])
