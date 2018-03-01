@@ -118,9 +118,6 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
             for (unsigned int nOut = 0; nOut < wtx.tx->vout.size(); nOut++)
             {
                 const CTxOut& txout = wtx.tx->vout[nOut];
-                TransactionRecord sub(hash, nTime);
-                sub.idx = nOut;
-                sub.involvesWatchAddress = involvesWatchAddress;
 
                 if(wallet->IsMine(txout))
                 {
@@ -128,6 +125,10 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                     // from a transaction sent back to our own address.
                     continue;
                 }
+
+                TransactionRecord sub(hash, nTime);
+                sub.idx = nOut;
+                sub.involvesWatchAddress = involvesWatchAddress;
 
                 CTxDestination address;
                 if (ExtractDestination(txout.scriptPubKey, address))
