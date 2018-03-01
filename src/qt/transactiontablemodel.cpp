@@ -380,6 +380,8 @@ QString TransactionTableModel::formatTxType(const TransactionRecord *wtx) const
         return tr("Payment to yourself");
     case TransactionRecord::Generated:
         return tr("Mined");
+    case TransactionRecord::Fee:
+        return tr("Fee");
     default:
         return QString();
     }
@@ -396,6 +398,7 @@ QVariant TransactionTableModel::txAddressDecoration(const TransactionRecord *wtx
         return QIcon(":/icons/tx_input");
     case TransactionRecord::SendToAddress:
     case TransactionRecord::SendToOther:
+    case TransactionRecord::Fee:
         return QIcon(":/icons/tx_output");
     default:
         return QIcon(":/icons/tx_inout");

@@ -113,7 +113,6 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
             //
             // Debit
             //
-            CAmount nTxFee = wtx.tx->GetFee()[Params().GetConsensus().pegged_asset];
 
             for (unsigned int nOut = 0; nOut < wtx.tx->vout.size(); nOut++)
             {
@@ -129,6 +128,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 TransactionRecord sub(hash, nTime);
                 sub.idx = nOut;
                 sub.involvesWatchAddress = involvesWatchAddress;
+                sub.debit = -wtx.GetOutputValueOut(nOut);
 
                 CTxDestination address;
                 if (ExtractDestination(txout.scriptPubKey, address))
@@ -144,15 +144,15 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                     sub.address = mapValue["to"];
                 }
 
-                CAmount nValue = wtx.GetOutputValueOut(nOut);
-                /* Add fee to first output */
-                if (nTxFee > 0)
-                {
-                    nValue += nTxFee;
-                    nTxFee = 0;
-                }
-                sub.debit = -nValue;
+                parts.append(sub);
+            }
 
+            CAmount nTxFee = wtx.tx->GetFee()[Params().GetConsensus().pegged_asset];
+
+            if (nTxFee > 0) {
+                TransactionRecord sub(hash, nTime);
+                sub.type = TransactionRecord::Fee;
+                sub.debit = -nTxFee;
                 parts.append(sub);
             }
         }
