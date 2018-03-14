@@ -221,6 +221,43 @@ unsigned int CScript::GetSigOpCount(const CScript& scriptSig) const
     return subscript.GetSigOpCount(true);
 }
 
+bool CScript::IsPegoutScript(uint256& genesis_hash, CScript& pegout_scriptpubkey) const
+{
+    const_iterator pc = begin();
+    std::vector<unsigned char> data;
+    opcodetype opcode;
+
+    // OP_RETURN
+    if (!GetOp(pc, opcode, data) || opcode != OP_RETURN) {
+        return false;
+    }
+
+    if (!GetOp(pc, opcode, data) || data.size() != 32 ) {
+        return false;
+    }
+    genesis_hash = uint256(data);
+  
+    // Read in parent chain destination scriptpubkey
+    if (!GetOp(pc, opcode, data) || data.size() == 0 ) {
+        return false;
+    }
+    pegout_scriptpubkey = CScript(data.begin(), data.end());
+
+    return true;
+}
+
+bool CScript::IsPegoutScript(const uint256& genesis_hash_check) const
+{
+    uint256 genesis_hash;
+    CScript pegout_scriptpubkey;
+    // Ensure hash matches parent chain genesis block
+    if (this->IsPegoutScript(genesis_hash, pegout_scriptpubkey) &&
+        genesis_hash_check == genesis_hash) {
+        return true;
+    }
+    return false;
+}
+
 bool CScript::IsWatchmenScript() const
 {
     const_iterator pc = begin();
@@ -295,34 +332,6 @@ public:
     }
 };
 static CSecp256k1Init instance_of_csecp256k1_ver;
-}
-
-bool CScript::IsPegoutScript(const uint256& genesis_hash) const
-{
-    const_iterator pc = begin();
-    std::vector<unsigned char> data;
-    opcodetype opcode;
-
-    // OP_RETURN
-    if (!GetOp(pc, opcode, data) || opcode != OP_RETURN) {
-        return false;
-    }
-
-    if (!GetOp(pc, opcode, data) || data.size() != 32 ) {
-        return false;
-    }
-
-    // Ensure hash matches parent chain genesis block
-    if (genesis_hash != uint256(data)) {
-        return false;
-    }
-
-    // Read in parent chain destination scriptpubkey
-    if (!GetOp(pc, opcode, data) || data.size() == 0 ) {
-        return false;
-    }
-
-    return true;
 }
 
 // Proof follows the OP_RETURN <genesis_block_hash> <destination_scriptpubkey>
