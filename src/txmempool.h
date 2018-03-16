@@ -544,7 +544,7 @@ public:
     void removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMemPoolHeight, int flags);
     void removeConflicts(const CTransaction &tx);
     void removeForBlock(const std::vector<CTransactionRef>& vtx, unsigned int nBlockHeight,
-                        const std::set<std::pair<uint256, COutPoint> >& setPeginsSpent);
+            const std::set<std::pair<uint256, COutPoint> >& setPeginsSpent, bool pak_transition);
     void clear();
     void _clear(); //lock free
     bool CompareDepthAndScore(const uint256& hasha, const uint256& hashb);
