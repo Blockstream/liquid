@@ -175,7 +175,7 @@ try:
         assert(type(e) == NameError)
         pass
 
-    sidechain2start = sys.argv[2]+"/liquidd -datadir="+sidechain2_datadir + sidechain_args
+    sidechain2start = sidechain_bin_path+"/liquidd -datadir="+sidechain2_datadir + sidechain_args
     subprocess.Popen(sidechain2start.split(), stdout=subprocess.PIPE)
 
     print("Restarting second sidechain daemon with proper fedpegscript")
