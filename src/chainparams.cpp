@@ -129,6 +129,7 @@ protected:
         consensus.nMinimumChainWork = uint256S(GetArg("-con_nminimumchainwork", "0x00"));
         // By default assume that the signatures in ancestors of this block are valid.
         consensus.defaultAssumeValid = uint256S(GetArg("-con_defaultassumevalid", "0x00"));
+        consensus.pegin_min_depth = GetArg("-peginconfirmationdepth", DEFAULT_PEGIN_CONFIRMATION_DEPTH);
 
         nDefaultPort = GetArg("-ndefaultport", 7042);
         nPruneAfterHeight = GetArg("-npruneafterheight", 1000);
@@ -249,6 +250,8 @@ public:
 
         // By default assume that the signatures in ancestors of this block are valid.
         consensus.defaultAssumeValid = uint256S("0x00");
+
+        consensus.pegin_min_depth = 100;
 
         pchMessageStart[0] = 0xfa;
         pchMessageStart[1] = 0xbf;
