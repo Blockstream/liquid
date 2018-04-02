@@ -3817,13 +3817,15 @@ UniValue sendtomainchain(const JSONRPCRequest& request)
     if (!EnsureWalletIsAvailable(request.fHelp))
         return NullUniValue;
 
-    if (request.fHelp || request.params.size() != 1)
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw runtime_error(
-            "sendtomainchain amount\n"
+            "sendtomainchain amount ( subtractfeefromamount ) \n"
             "\nSends Liquid funds to the Bitcoin mainchain, through the federated withdraw mechanism. The wallet internally generates the returned `bitcoin_address` via `bitcoin_xpub` and `bip32_counter` previously set in `initpegoutwallet`. The counter will be incremented upon successful send, avoiding address re-use.\n"
             + HelpRequiringPassphrase() +
             "\nArguments:\n"
             "1. \"amount\"   (numeric, required) The amount being sent to `bitcoin_address`.\n"
+            "2. \"subtractfeefromamount\"  (boolean, optional, default=false) The fee will be deducted from the amount being pegged-out.\n"
+            "\nResult:\n"
             "\nResult:\n"
             "{\n"
                 "\"bitcoin_address\"   (string) The destination address on Bitcoin mainchain."
@@ -3844,6 +3846,11 @@ UniValue sendtomainchain(const JSONRPCRequest& request)
     CAmount nAmount = AmountFromValue(request.params[0]);
     if (nAmount < 100000)
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for send, must send more than 0.0001 BTC");
+
+    bool subtract_fee = false;
+    if (request.params.size() > 1) {
+        subtract_fee = request.params[2].get_bool();
+    }
 
     CPAKList paklist = g_paklist_blockchain;
     if (g_paklist_config) {
@@ -3962,7 +3969,7 @@ UniValue sendtomainchain(const JSONRPCRequest& request)
     EnsureWalletIsUnlocked();
 
     CWalletTx wtxNew;
-    SendMoney(scriptPubKey, nAmount, Params().GetConsensus().pegged_asset, false, CPubKey(), wtxNew, true);
+    SendMoney(scriptPubKey, nAmount, Params().GetConsensus().pegged_asset, subtract_fee, CPubKey(), wtxNew, true);
 
     pwalletMain->SetOfflineCounter(counter+1);
 
@@ -4687,7 +4694,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "setaccount",               &setaccount,               true,   {"address","account"} },
     { "wallet",             "reissueasset",             &reissueasset,             true,   {"asset", "assetamount"} },
     { "wallet",             "signblock",                &signblock,                true,   {} },
-    { "wallet",             "sendtomainchain",          &sendtomainchain,          false,  {"amount"} },
+    { "wallet",             "sendtomainchain",          &sendtomainchain,          false,  {"amount", "subtractfeefromamount"} },
     { "wallet",             "destroyamount",            &destroyamount,            false,  {"asset", "amount", "comment"} },
     { "wallet",             "settxfee",                 &settxfee,                 true,   {"amount"} },
     { "wallet",             "signmessage",              &signmessage,              true,   {"address","message"} },
