@@ -3849,7 +3849,7 @@ UniValue sendtomainchain(const JSONRPCRequest& request)
 
     bool subtract_fee = false;
     if (request.params.size() > 1) {
-        subtract_fee = request.params[2].get_bool();
+        subtract_fee = request.params[1].get_bool();
     }
 
     CPAKList paklist = g_paklist_blockchain;
