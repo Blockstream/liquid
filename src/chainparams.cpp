@@ -124,6 +124,7 @@ protected:
         consensus.fPowNoRetargeting = GetBoolArg("-con_fpownoretargeting", true);
         consensus.nRuleChangeActivationThreshold = GetArg("-con_nrulechangeactivationthreshold", 108); // 75% for testchains
         consensus.nMinerConfirmationWindow = GetArg("-con_nminerconfirmationwindow", 144); // Faster than normal for custom (144 instead of 2016)
+        consensus.mandatory_coinbase_destination = StrHexToScriptWithDefault(GetArg("-con_mandatorycoinbase", ""), CScript()); // Blank script allows any coinbase destination
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S(GetArg("-con_nminimumchainwork", "0x00"));
@@ -180,8 +181,6 @@ public:
         AppendInitialIssuance(genesis, COutPoint(uint256(commit), 0), parentGenesisBlockHash, 100, 21000000000000, 0, 0, CScript() << OP_TRUE);
         consensus.hashGenesisBlock = genesis.GetHash();
 
-
-        scriptCoinbaseDestination = CScript(); // Allow any coinbase destination
 
         vFixedSeeds.clear(); //!< Regtest mode doesn't have any fixed seeds.
         vSeeds.clear();      //!< Regtest mode doesn't have any DNS seeds.
@@ -278,7 +277,7 @@ public:
         CScript raw_multisig(coinbase_script_bytes.begin(), coinbase_script_bytes.end());
         uint160 script_id(Hash160(raw_multisig.begin(), raw_multisig.end()));
         // same as CSV emergency clause for mainnet, 2 of 3 multisig
-        scriptCoinbaseDestination = CScript() << OP_HASH160 << std::vector<unsigned char>(script_id.begin(), script_id.end()) << OP_EQUAL;
+        consensus.mandatory_coinbase_destination = CScript() << OP_HASH160 << std::vector<unsigned char>(script_id.begin(), script_id.end()) << OP_EQUAL;
 
         vFixedSeeds.clear();
         vSeeds.clear();
