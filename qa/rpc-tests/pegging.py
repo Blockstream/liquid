@@ -92,6 +92,8 @@ def write_bitcoin_conf(datadir, rpcport, rpcpass=None, p2p_port=None, connect_po
         f.write("testnet=0\n")
         f.write("txindex=1\n")
         f.write("daemon=1\n")
+        # To make sure bitcoind gives back p2pkh no matter version
+        f.write("addresstype=legacy\n")
         if connect_port:
             f.write("connect=localhost:"+str(connect_port)+"\n")
             f.write("listen=1\n")
@@ -120,6 +122,8 @@ with open(os.path.join(sidechain_datadir, "liquid.conf"), 'w') as f:
         f.write("connect=localhost:"+str(sidechain2_p2p_port)+"\n")
         f.write("listen=1\n")
         f.write("fallbackfee=0.00001\n")
+        # PAK entry needed for simple peg-outs
+        f.write("pak=03fcba7ecf41bc7e1be4ee122d9d22e3333671eb0a3a87b5cdf099d59874e1940f:038a2ab87e8d3d9eb2dbd3aa9911e16541bd8d42a13d29584fb25c6272e9ac23ea\n")
 
 with open(os.path.join(sidechain2_datadir, "liquid.conf"), 'w') as f:
         f.write("regtest=1\n")
@@ -139,6 +143,23 @@ with open(os.path.join(sidechain2_datadir, "liquid.conf"), 'w') as f:
         f.write("connect=localhost:"+str(sidechain1_p2p_port)+"\n")
         f.write("listen=1\n")
         f.write("fallbackfee=0.00001\n")
+
+def test_pegout(parent_chain_addr, sidechain):
+    pegout_txid = sidechain.sendtomainchain(1)["txid"]
+    raw_pegout = sidechain.getrawtransaction(pegout_txid, True)
+    assert 'vout' in raw_pegout and len(raw_pegout['vout']) > 0
+    pegout_tested = False
+    for output in raw_pegout['vout']:
+        scriptPubKey = output['scriptPubKey']
+        if 'type' in scriptPubKey and scriptPubKey['type'] == 'nulldata':
+            assert ('pegout_hex' in scriptPubKey and 'pegout_asm' in scriptPubKey and 'pegout_type' in scriptPubKey and
+                    'pegout_chain' in scriptPubKey and 'pegout_reqSigs' in scriptPubKey and 'pegout_addresses' in scriptPubKey)
+            assert scriptPubKey['pegout_chain'] == '0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206' #testnet3
+            assert scriptPubKey['pegout_reqSigs'] == 1
+            assert parent_chain_addr in scriptPubKey['pegout_addresses']
+            pegout_tested = True
+            break
+    assert pegout_tested
 
 try:
 
@@ -195,6 +216,17 @@ try:
     sidechain2.getwalletinfo()
 
     addr = bitcoin.getnewaddress()
+
+    # Activate PAK wallet to allow peg out testing
+    sidechain.importprivkey("cUyokiFagFZQpUwwh5Qjsp6jAjRX77tUAWP8kznhCtWyXBWm1gip")
+    pakstuff = sidechain.initpegoutwallet("tpubDAenfwNu5GyCJWv8oqRAckdKMSUoZjgVF5p8WvQwHQeXjDhAHmGrPa4a4y2Fn7HF2nfCLefJanHV3ny1UY25MRVogizB2zRUdAo7Tr9XAjm", 0, "038a2ab87e8d3d9eb2dbd3aa9911e16541bd8d42a13d29584fb25c6272e9ac23ea")
+
+    # First, blackhole almost all 21M bitcoin that already exist(and test subtractfrom)
+    assert(sidechain.getwalletinfo()["balance"]["bitcoin"] == 21000000)
+    sidechain.sendtomainchain(20999998, True)
+    assert(sidechain.getwalletinfo()["balance"]["bitcoin"] == 2)
+
+    sidechain.generate(101)
 
     addrs = sidechain.getpeginaddress()
     txid1 = bitcoin.sendtoaddress(addrs["mainchain_address"], 24)
@@ -272,7 +304,7 @@ try:
         raise Exception("Peg-in should be back to 6 confirms.")
 
     # Do many claims in mempool
-    n_claims = 100
+    n_claims = 5
 
     print("Flooding mempool with many small claims")
     pegtxs = []
@@ -295,8 +327,38 @@ try:
         if "confirmations" not in tx or tx["confirmations"] == 0:
             raise Exception("Peg-in confirmation has failed.")
 
+    print("Test pegout")
+    # second peg-out so far
+    test_pegout(pakstuff["address_lookahead"][1], sidechain)
+
+    print("Test pegout Garbage valid")
+    prev_txid = sidechain.sendtoaddress(sidechain.getnewaddress(), 1)
+    sidechain.generate(1)
+    pegout_chain = 'a' * 64
+    pegout_hex = 'b' * 500
+    inputs = [{"txid": prev_txid, "vout": 0}]
+    outputs = {"vdata": [pegout_chain, pegout_hex]}
+    rawtx = sidechain.createrawtransaction(inputs, outputs)
+    raw_pegout = sidechain.decoderawtransaction(rawtx)
+
+    assert 'vout' in raw_pegout and len(raw_pegout['vout']) > 0
+    pegout_tested = False
+    for output in raw_pegout['vout']:
+        scriptPubKey = output['scriptPubKey']
+        if 'type' in scriptPubKey and scriptPubKey['type'] == 'nulldata':
+            assert ('pegout_hex' in scriptPubKey and 'pegout_asm' in scriptPubKey and 'pegout_type' in scriptPubKey and
+                    'pegout_chain' in scriptPubKey and 'pegout_reqSigs' not in scriptPubKey and 'pegout_addresses' not in scriptPubKey)
+            assert scriptPubKey['pegout_type'] == 'nonstandard'
+            assert scriptPubKey['pegout_chain'] == pegout_chain
+            assert scriptPubKey['pegout_hex'] == pegout_hex
+            pegout_tested = True
+            break
+    assert pegout_tested
+
     print ("Now test failure to validate peg-ins based on intermittant bitcoind rpc failure")
     bitcoin2.stop()
+    # give bitcoin2 time to stop
+    time.sleep(1)
     txid = bitcoin.sendtoaddress(addrs["mainchain_address"], 1)
     bitcoin.generate(12)
     proof = bitcoin.gettxoutproof([txid])
@@ -320,6 +382,36 @@ try:
     # is awaiting further validation, nodes reject subsequent blocks
     # even ones they create
     sync_all(sidechain, sidechain2, False)
+    print("Now send funds out in two stages, partial, and full")
+    some_btc_addr = bitcoin.getnewaddress()
+    bal_1 = sidechain.getwalletinfo()["balance"]["bitcoin"]
+    try:
+        sidechain.sendtomainchain(bal_1 + 1)
+        raise Exception("Sending out too much; should have failed")
+    except JSONRPCException as e:
+        assert("Insufficient funds" in e.error["message"])
+        pass
+
+    assert(sidechain.getwalletinfo()["balance"]["bitcoin"] == bal_1)
+
+    peg_out_txid = sidechain.sendtomainchain(1)["txid"]
+
+    peg_out_details = sidechain.decoderawtransaction(sidechain.getrawtransaction(peg_out_txid))
+    # peg-out, change
+    assert(len(peg_out_details["vout"]) == 3)
+    found_pegout_value = False
+    for output in peg_out_details["vout"]:
+        if "value" in output and output["value"] == 1:
+            found_pegout_value = True
+    assert(found_pegout_value)
+
+    bal_2 = sidechain.getwalletinfo()["balance"]["bitcoin"]
+    # Make sure balance went down
+    assert(bal_2 + 1 < bal_1)
+
+    sidechain.sendtomainchain(bal_2, True)
+
+    assert("bitcoin" not in sidechain.getwalletinfo()["balance"])
 
     print("Success!")
 
