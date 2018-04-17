@@ -190,10 +190,14 @@ bool CachingSurjectionProofChecker::VerifySurjectionProof(secp256k1_surjectionpr
     vchproof.resize(secp256k1_surjectionproof_serialized_size(secp256k1_ctx_verify_amounts, &proof));
     secp256k1_surjectionproof_serialize(secp256k1_ctx_verify_amounts, &vchproof[0], &proof_len, &proof);
 
+    // libsecp API only supports up to 256 indices for surjection, so we truncate
+    // commitment list to that size. Assets must be proven against the first 256 inputs.
+    size_t surjection_size = std::min(vTags.size(), (size_t)SECP256K1_SURJECTIONPROOF_MAX_N_INPUTS);
+
     std::vector<unsigned char> tagCommit;
     tagCommit.resize(33);
     CSHA256 sha2;
-    for (unsigned int i = 0; i <vTags.size(); i++) {
+    for (unsigned int i = 0; i < surjection_size; i++) {
         secp256k1_generator_serialize(secp256k1_ctx_verify_amounts, tagCommit.data(), &vTags[i]);
         sha2.Write(tagCommit.data(), tagCommit.size());
     }
@@ -212,7 +216,7 @@ bool CachingSurjectionProofChecker::VerifySurjectionProof(secp256k1_surjectionpr
         return true;
     }
 
-    if (secp256k1_surjectionproof_verify(secp256k1_ctx_verify_amounts, &proof, vTags.data(), vTags.size(), &gen) != 1) {
+    if (secp256k1_surjectionproof_verify(secp256k1_ctx_verify_amounts, &proof, vTags.data(), surjection_size, &gen) != 1) {
         return false;
     }
 
