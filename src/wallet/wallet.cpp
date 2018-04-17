@@ -3259,7 +3259,11 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                 int ret = BlindTransaction(input_blinds, input_asset_blinds, input_assets, input_amounts, output_blinds, output_asset_blinds,  output_pubkeys, vassetKeys, vtokenKeys, txNew);
                 assert(ret != -1);
                 if (ret != numToBlind) {
-                    strFailReason = _("Unable to blind the transaction properly. This should not happen.");
+                    if (txNew.vin.size() > 150) {
+                        strFailReason = _("Transaction blinding failed. One possible reason is you have over 150 inputs, which can cause transaction blinding failure in remote cases. Try sending fewer assets at a single time, or spend fewer inputs.");
+                    } else {
+                        strFailReason = _("Unable to blind the transaction properly. This should not happen.");
+                    }
                     return false;
                 }
 

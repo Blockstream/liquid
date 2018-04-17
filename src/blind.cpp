@@ -98,18 +98,19 @@ bool SurjectOutput(CTxOutWitness& txoutwit, const std::vector<secp256k1_fixed_as
 {
     int ret;
     size_t nInputsToSelect = std::min((size_t)3, surjectionTargets.size());
+    size_t surjection_target_size = std::min(surjectionTargets.size(), (size_t)SECP256K1_SURJECTIONPROOF_MAX_N_INPUTS);
     unsigned char randseed[32];
     GetRandBytes(randseed, 32);
     size_t input_index;
     secp256k1_surjectionproof proof;
     secp256k1_fixed_asset_tag tag;
     memcpy(&tag, asset.begin(), 32);
-    if (secp256k1_surjectionproof_initialize(secp256k1_blind_context, &proof, &input_index, &surjectionTargets[0], surjectionTargets.size(), nInputsToSelect, &tag, 100, randseed) == 0) {
+    if (secp256k1_surjectionproof_initialize(secp256k1_blind_context, &proof, &input_index, &surjectionTargets[0], surjection_target_size, nInputsToSelect, &tag, 10000, randseed) == 0) {
         return false;
     }
-    ret = secp256k1_surjectionproof_generate(secp256k1_blind_context, &proof, &targetAssetGenerators[0], targetAssetGenerators.size(), &gen, input_index, targetAssetBlinders[input_index].begin(), assetblindptrs[assetblindptrs.size()-1]);
+    ret = secp256k1_surjectionproof_generate(secp256k1_blind_context, &proof, &targetAssetGenerators[0], surjection_target_size, &gen, input_index, targetAssetBlinders[input_index].begin(), assetblindptrs[assetblindptrs.size()-1]);
     assert(ret == 1);
-    ret = secp256k1_surjectionproof_verify(secp256k1_blind_context, &proof, &targetAssetGenerators[0], targetAssetGenerators.size(), &gen);
+    ret = secp256k1_surjectionproof_verify(secp256k1_blind_context, &proof, &targetAssetGenerators[0], surjection_target_size, &gen);
     assert(ret != 0);
 
     size_t output_len = secp256k1_surjectionproof_serialized_size(secp256k1_blind_context, &proof);
