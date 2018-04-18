@@ -483,6 +483,33 @@ class CTTest (BitcoinTestFramework):
         assert("value" in outputs[0] and "value" in outputs[1] and "value" in outputs[2])
         assert_equal(outputs[2]["scriptPubKey"]["type"], 'nulldata')
 
+        # Issue 257 assets, spend them all at one time. Proving against more than 256 inputs
+        # is beyond current CA libsecp API's abilities. Unlikely, but we need to test
+        # that it fails to enter the mempool and doesn't crash the node.
+        issued_assets = []
+        destination_value = {}
+        destination_asset = {}
+        for i in range(230):
+            address = self.nodes[0].getnewaddress()
+            issued_assets.append(self.nodes[0].issueasset(1, 0))
+            destination_asset[address] = issued_assets[-1]["asset"]
+            destination_value[address] = 0.015
+            self.nodes[0].generate(1)
+
+        self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), self.nodes[0].getbalance()["bitcoin"], "", "", True)
+        # This blinding would work, aside from the transaction being too large and being rejected
+        # It's too large because there are over 500 rangeproof'd outputs and too many inputs
+        assert_raises_message(JSONRPCException, "Transaction too large", self.nodes[0].sendmany, "", destination_value, 0, "", [], destination_asset)
+        for i in range(26):
+            address = self.nodes[0].getnewaddress()
+            issued_assets.append(self.nodes[0].issueasset(1, 0))
+            destination_asset[address] = issued_assets[-1]["asset"]
+            destination_value[address] = 0.01
+            self.nodes[0].generate(1)
+
+        # This blinding can't work within API since there are more than 256 unique assets being spent
+        assert_raises_message(JSONRPCException, "Transaction blinding failed. One possible reason is you have over 150 inputs, which can cause transaction blinding failure in remote cases. Try sending fewer assets at a single time, or spend fewer inputs.", self.nodes[0].sendmany, "", destination_value, 0, "", [], destination_asset)
+
         # Test standardness of issuances
         self.stop_node(1)
         tx_raw = self.nodes[0].gettransaction(self.nodes[0].issueasset(1, 1)["txid"])["hex"]
@@ -494,6 +521,17 @@ class CTTest (BitcoinTestFramework):
             err_msg = e.error["message"]
 
         assert_equal(err_msg, "64: non-null-issuance")
+
+        # Make sure wallet can spend >256 inputs of all the same type(btc)
+        # since surjection proof is a trivial mapping
+        unblinded_destinations = {}
+        for i in range(300):
+            unblinded_destinations[self.nodes[0].validateaddress(self.nodes[0].getnewaddress())["unconfidential"]] = 2
+        self.nodes[0].sendmany("", unblinded_destinations, 0)
+        self.nodes[0].generate(1)
+        txid = self.nodes[0].sendmany("", {self.nodes[0].getnewaddress():self.nodes[0].getbalance()["bitcoin"]/2 - 1, self.nodes[0].getnewaddress():self.nodes[0].getbalance()["bitcoin"]/2 - 1})
+        self.nodes[0].generate(1)
+        assert_equal(self.nodes[0].gettransaction(txid)["confirmations"], 1)
 
 if __name__ == '__main__':
     CTTest ().main ()
