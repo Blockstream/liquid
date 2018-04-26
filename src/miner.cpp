@@ -149,7 +149,10 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     }
 
     // Pad block weight to account for OP_RETURN commitments with two compressed pubkeys
-    nBlockWeight += commitments.size()*74;
+    for (const auto& commitment : commitments) {
+        CTxOut output(CAsset(), 0, commitment);
+        nBlockWeight += ::GetSerializeSize(output, SER_NETWORK, PROTOCOL_VERSION)*WITNESS_SCALE_FACTOR;
+    }
 
     // Add dummy coinbase tx as first transaction
     pblock->vtx.emplace_back();
