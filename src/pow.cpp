@@ -79,7 +79,8 @@ bool CheckProof(const CBlockHeader& block, const Consensus::Params& params)
         | SCRIPT_VERIFY_CLEANSTACK // No extra pushes leftover in witness
         | SCRIPT_VERIFY_MINIMALDATA // Pushes are minimally-sized
         | SCRIPT_VERIFY_SIGPUSHONLY // Witness is push-only
-        | SCRIPT_VERIFY_LOW_S; // Stop easiest signature fiddling
+        | SCRIPT_VERIFY_LOW_S // Stop easiest signature fiddling
+        | SCRIPT_VERIFY_WITNESS; // Required for cleanstack eval in VerifyScript
     return GenericVerifyScript(block.proof.solution, block.proof.challenge, proof_flags, block);
 }
 
