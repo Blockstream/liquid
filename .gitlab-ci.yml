@@ -1,0 +1,8 @@
+build_x86_64_linux:
+  tags:
+    - deploy_web
+  script:
+    - apt update -yqq && apt install -yqq python build-essential libtool autotools-dev automake pkg-config bsdmainutils curl python3 unzip python3-zmq
+    - cd $CI_PROJECT_DIR/depends && make HOST=x86_64-pc-linux-gnu NO_QT=1
+    - cd $CI_PROJECT_DIR && ./autogen.sh && ./configure --prefix=$PWD/depends/x86_64-pc-linux-gnu --without-gui --without-miniupnpc && make check && ./qa/pull-tester/rpc-tests.py
+
