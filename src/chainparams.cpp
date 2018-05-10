@@ -156,6 +156,11 @@ public:
             assert(false);
         }
 
+        if (!anyonecanspend_aremine) {
+            assert("Anyonecanspendismine was marked as false, but they are in the genesis block"
+                    && initialFreeCoins == 0);
+        }
+
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 0;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 999999999999ULL;
