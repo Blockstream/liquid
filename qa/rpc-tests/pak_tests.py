@@ -319,11 +319,18 @@ class CTTest (BitcoinTestFramework):
         # pak1 will now create a pegout.
         pak1_pegout_txid = self.nodes[i_pak1].sendtomainchain(1)["txid"]
         assert_equal(self.nodes[i_pak1].getpakinfo()["derivation_path"], "/0/1")
-        time.sleep(4)
-        assert_equal(pak1_pegout_txid in self.nodes[i_novalidate].getrawmempool(), True)
-        assert_equal(pak1_pegout_txid in self.nodes[i_undefined].getrawmempool(), True)
-        assert_equal(pak1_pegout_txid in self.nodes[i_pak2].getrawmempool(), False)
-        assert_equal(pak1_pegout_txid in self.nodes[i_reject].getrawmempool(), False)
+
+        # Wait for two nodes to get transaction in mempool only
+        time_to_wait = 15
+        while time_to_wait > 0:
+            if (pak1_pegout_txid in self.nodes[i_novalidate].getrawmempool() and
+                pak1_pegout_txid in self.nodes[i_undefined].getrawmempool() and
+                pak1_pegout_txid not in self.nodes[i_pak2].getrawmempool() and
+                pak1_pegout_txid not in self.nodes[i_reject].getrawmempool()):
+                    break
+            time_to_wait -= 1
+            time.sleep(1)
+        assert(time_to_wait > 0)
 
         # pak_reject will make a block commitment, causing all validating nodes to dump
         # the peg transaction
