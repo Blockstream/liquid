@@ -8,6 +8,8 @@ src/liquid-tx
 src/test/test_liquid
 src/qt/test/test_liquid-qt
 src/test/test_liquid_fuzzy
+src/test/test_elements
+src/test/test_elements_fuzzy
 
 # autoreconf
 Makefile.in
