@@ -290,7 +290,7 @@ public:
         vSeeds.clear();
 
         fMiningRequiresPeers = false;
-        fDefaultConsistencyChecks = true;
+        fDefaultConsistencyChecks = false;
         fRequireStandard = true;
         fMineBlocksOnDemand = false;
         anyonecanspend_aremine = false;
