@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
 from test_framework.authproxy import AuthServiceProxy, JSONRPCException
 from decimal import Decimal
@@ -198,9 +198,7 @@ try:
     try:
         sidechain2.getwalletinfo()
         raise Exception('Invalid fedpegscript should abort start')
-    except Exception as e:
-        # BrokenPipe error
-        assert(type(e) == NameError)
+    except ConnectionRefusedError:
         pass
 
     sidechain2start = sidechain_bin_path+"/liquidd -datadir="+sidechain2_datadir + sidechain_args
