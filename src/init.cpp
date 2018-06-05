@@ -513,8 +513,14 @@ std::string HelpMessage(HelpMessageMode mode)
         strUsage += HelpMessageOpt("-fedpegscript=<hex>", _("Change federated peg to use a different script.") +
             " " + _("This creates a new chain with a different genesis block."));
         strUsage += HelpMessageOpt("-peginconfirmationdepth", strprintf(_("Pegin claims must be this deep to be considered valid. (default: %d)"), DEFAULT_PEGIN_CONFIRMATION_DEPTH));
+        strUsage += HelpMessageOpt("-pubkeyprefix", strprintf(_("The byte prefix, in decimal, of the chain's base58 pubkey address. (default: %d)"), 235));
         strUsage += HelpMessageOpt("-parentpubkeyprefix", strprintf(_("The byte prefix, in decimal, of the parent chain's base58 pubkey address. (default: %d)"), 111));
+        strUsage += HelpMessageOpt("-scriptprefix", strprintf(_("The byte prefix, in decimal, of the chain's base58 script address. (default: %d)"), 75));
         strUsage += HelpMessageOpt("-parentscriptprefix", strprintf(_("The byte prefix, in decimal, of the parent chain's base58 script address. (default: %d)"), 196));
+        strUsage += HelpMessageOpt("-secretprefix", strprintf(_("The byte prefix, in decimal, of the chain's base58 secret key encoding. (default: %d)"), 239));
+        strUsage += HelpMessageOpt("-extpubkeyprefix", strprintf(_("The 4-byte prefix, in hex, of the chain's base58 extended public key encoding. (default: %s)"), "043587CF"));
+        strUsage += HelpMessageOpt("-extprvkeyprefix", strprintf(_("The 4-byte prefix, in hex, of the chain's base58 extended private key encoding. (default: %s)"), "04358394"));
+        strUsage += HelpMessageOpt("-blindedprefix", strprintf(_("The byte prefix, in decimal, of the chain's base58 script address. (default: %d)"), 4));
 
     }
     strUsage += HelpMessageOpt("-validatepegin", strprintf(_("Validate pegin claims. All functionaries must run this. (default: %u)"), DEFAULT_VALIDATE_PEGIN));
