@@ -510,17 +510,6 @@ class CTTest (BitcoinTestFramework):
         # This blinding can't work within API since there are more than 256 unique assets being spent
         assert_raises_message(JSONRPCException, "Transaction blinding failed. One possible reason is you have over 150 inputs, which can cause transaction blinding failure in remote cases. Try sending fewer assets at a single time, or spend fewer inputs.", self.nodes[0].sendmany, "", destination_value, 0, "", [], destination_asset)
 
-        # Test standardness of issuances
-        self.stop_node(1)
-        tx_raw = self.nodes[0].gettransaction(self.nodes[0].issueasset(1, 1)["txid"])["hex"]
-        self.nodes[1] = start_node(1, self.options.tmpdir, ["-acceptnonstdtxn=0"])
-        err_msg = None
-        try:
-            self.nodes[1].sendrawtransaction(tx_raw)
-        except JSONRPCException as e:
-            err_msg = e.error["message"]
-
-        assert_equal(err_msg, "64: non-null-issuance")
 
         # Make sure wallet can spend >256 inputs of all the same type(btc)
         # since surjection proof is a trivial mapping
@@ -532,6 +521,5 @@ class CTTest (BitcoinTestFramework):
         txid = self.nodes[0].sendmany("", {self.nodes[0].getnewaddress():self.nodes[0].getbalance()["bitcoin"]/2 - 1, self.nodes[0].getnewaddress():self.nodes[0].getbalance()["bitcoin"]/2 - 1})
         self.nodes[0].generate(1)
         assert_equal(self.nodes[0].gettransaction(txid)["confirmations"], 1)
-
 if __name__ == '__main__':
     CTTest ().main ()
