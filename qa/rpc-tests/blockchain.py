@@ -103,7 +103,7 @@ class BlockchainTest(BitcoinTestFramework):
         besthash = self.nodes[0].getbestblockhash()
         res = self.nodes[0].getblockchaininfo()
 
-        assert_equal(res['chain'], 'elementsregtest')
+        assert_equal(res['chain'], 'liquidregtest')
         assert_equal(res['signblock_asm'], '1')
         assert_equal(res['signblock_hex'], '51')
         assert 'difficulty' not in res
