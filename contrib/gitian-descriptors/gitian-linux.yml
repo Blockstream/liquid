@@ -28,7 +28,7 @@ packages:
 - "ca-certificates"
 - "python"
 remotes:
-- "url": "https://github.com/ElementsProject/elements.git"
+- "url": "git@gl.blockstream.io:liquid/liquid-daemon.git"
   "dir": "liquid"
 files: []
 script: |
