@@ -141,6 +141,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "testproposedblock", 1, "acceptnonstd" },
     { "sendtomainchain", 1, "subtractfeefromamount"},
     { "getnewblockhex", 0, "required_age"},
+    { "initpegoutwallet", 1, "bip32_counter"},
     // Echo with conversion (For testing only)
     { "echojson", 0, "arg0" },
     { "echojson", 1, "arg1" },
