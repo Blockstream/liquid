@@ -13,6 +13,7 @@
 const std::string CBaseChainParams::MAIN = CHAINPARAMS_OLD_MAIN;
 const std::string CBaseChainParams::REGTEST = CHAINPARAMS_REGTEST;
 const std::string CBaseChainParams::LIQUID = CHAINPARAMS_LIQUID;
+const std::string CBaseChainParams::LIQUIDV1 = CHAINPARAMS_LIQUIDV1;
 
 void AppendParamsHelpMessages(std::string& strUsage, bool debugHelp)
 {
@@ -37,7 +38,9 @@ std::unique_ptr<CBaseChainParams> CreateBaseChainParams(const std::string& chain
         return std::unique_ptr<CBaseChainParams>(new CBaseChainParams(chain, 8332, 18332));
     else if (chain == CHAINPARAMS_LIQUID)
         return std::unique_ptr<CBaseChainParams>(new CBaseChainParams(chain, 10099, 8332));
-    return std::unique_ptr<CBaseChainParams>(new CBaseChainParams(chain, 7041, 18332));
+    else if (chain == CHAINPARAMS_LIQUIDV1)
+        return std::unique_ptr<CBaseChainParams>(new CBaseChainParams(chain, 7041, 18332));
+    return std::unique_ptr<CBaseChainParams>(new CBaseChainParams(chain, 7040, 18331));
 }
 
 void SelectBaseParams(const std::string& chain)
@@ -51,5 +54,5 @@ std::string ChainNameFromCommandLine()
         throw std::runtime_error(strprintf("%s: Invalid option -testnet: try -chain=%s instead.", __func__, CHAINPARAMS_REGTEST));
     if (GetBoolArg("-regtest", false))
         return CBaseChainParams::REGTEST;
-    return GetArg("-chain", CHAINPARAMS_LIQUID);
+    return GetArg("-chain", CHAINPARAMS_LIQUIDV1);
 }
