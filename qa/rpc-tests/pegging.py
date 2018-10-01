@@ -125,6 +125,7 @@ with open(os.path.join(sidechain_datadir, "liquid.conf"), 'w') as f:
         # PAK entry needed for simple peg-outs
         f.write("pak=03fcba7ecf41bc7e1be4ee122d9d22e3333671eb0a3a87b5cdf099d59874e1940f:038a2ab87e8d3d9eb2dbd3aa9911e16541bd8d42a13d29584fb25c6272e9ac23ea\n")
         f.write("initialfreecoins=2100000000000000\n")
+        f.write("recheckpeginblockinterval=15\n")
 
 with open(os.path.join(sidechain2_datadir, "liquid.conf"), 'w') as f:
         f.write("regtest=1\n")
@@ -145,6 +146,7 @@ with open(os.path.join(sidechain2_datadir, "liquid.conf"), 'w') as f:
         f.write("listen=1\n")
         f.write("fallbackfee=0.00001\n")
         f.write("initialfreecoins=2100000000000000\n")
+        f.write("recheckpeginblockinterval=15\n")
 
 def test_pegout(parent_chain_addr, sidechain):
     pegout_txid = sidechain.sendtomainchain(1)["txid"]

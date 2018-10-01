@@ -519,8 +519,8 @@ std::string HelpMessage(HelpMessageMode mode)
         strUsage += HelpMessageOpt("-parentscriptprefix", strprintf(_("The byte prefix, in decimal, of the parent chain's base58 script address. (default: %d)"), 196));
         strUsage += HelpMessageOpt("-secretprefix", strprintf(_("The byte prefix, in decimal, of the chain's base58 secret key encoding. (default: %d)"), 239));
         strUsage += HelpMessageOpt("-extpubkeyprefix", strprintf(_("The 4-byte prefix, in hex, of the chain's base58 extended public key encoding. (default: %s)"), "043587CF"));
-        strUsage += HelpMessageOpt("-extprvkeyprefix", strprintf(_("The 4-byte prefix, in hex, of the chain's base58 extended private key encoding. (default: %s)"), "04358394"));
         strUsage += HelpMessageOpt("-blindedprefix", strprintf(_("The byte prefix, in decimal, of the chain's base58 script address. (default: %d)"), 4));
+        strUsage += HelpMessageOpt("-recheckpeginblockinterval", strprintf(_("The interval in seconds at which a peg-in witness failing block is re-evaluated in case of intermittant peg-in witness failure. 0 means never. (default: %u)"), 120));
 
     }
     strUsage += HelpMessageOpt("-validatepegin", strprintf(_("Validate pegin claims. All functionaries must run this. (default: %u)"), DEFAULT_VALIDATE_PEGIN));
@@ -1752,7 +1752,10 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     SetRPCWarmupFinished();
 
     CScheduler::Function f2 = boost::bind(&BitcoindRPCCheck, false);
-    scheduler.scheduleEvery(f2, 120);
+    unsigned int check_rpc_every = GetArg("-recheckpeginblockinterval", 120);
+    if (check_rpc_every) {
+        scheduler.scheduleEvery(f2, check_rpc_every);
+    }
 
     uiInterface.InitMessage(_("Awaiting bitcoind RPC warmup"));
 
