@@ -90,6 +90,7 @@ def write_bitcoin_conf(datadir, rpcport, rpcpass=None, p2p_port=None, connect_po
         f.write("rpcport="+str(rpcport)+"\n")
         f.write("discover=0\n")
         f.write("testnet=0\n")
+        f.write("validatepegin=0\n")
         f.write("txindex=1\n")
         f.write("daemon=1\n")
         # To make sure bitcoind gives back p2pkh no matter version

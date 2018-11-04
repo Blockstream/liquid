@@ -50,38 +50,38 @@ BOOST_AUTO_TEST_CASE(witness_valid)
     CScriptWitness witness;
     witness.stack = witness_stack;
 
-    BOOST_CHECK(IsValidPeginWitness(witness, prevout));
+    BOOST_CHECK(IsValidPeginWitness(witness, prevout, false));
 
     // Missing byte on each field to make claim ill-formatted
     // This will break deserialization and other data-matching checks
     for (unsigned int i = 0; i < witness.stack.size(); i++) {
         witness.stack[i].pop_back();
-        BOOST_CHECK(!IsValidPeginWitness(witness, prevout));
+        BOOST_CHECK(!IsValidPeginWitness(witness, prevout, false));
         witness.stack = witness_stack;
-        BOOST_CHECK(IsValidPeginWitness(witness, prevout));
+        BOOST_CHECK(IsValidPeginWitness(witness, prevout, false));
     }
 
     // Test mismatched but valid nOut to proof
     COutPoint fake_prevout = prevout;
     fake_prevout.n = 0;
-    BOOST_CHECK(!IsValidPeginWitness(witness, fake_prevout));
+    BOOST_CHECK(!IsValidPeginWitness(witness, fake_prevout, false));
 
     // Test mistmatched but valid txid
     fake_prevout = prevout;
     fake_prevout.hash = uint256S("2f103ee04a5649eecb932b4da4ca9977f53a12bbe04d9d1eb5ccc0f4a06334");
-    BOOST_CHECK(!IsValidPeginWitness(witness, fake_prevout));
+    BOOST_CHECK(!IsValidPeginWitness(witness, fake_prevout, false));
 
     // Ensure that all witness stack sizes are handled
-    BOOST_CHECK(IsValidPeginWitness(witness, prevout));
+    BOOST_CHECK(IsValidPeginWitness(witness, prevout, false));
     for (unsigned int i = 0; i < witness.stack.size(); i++) {
         witness.stack.pop_back();
-        BOOST_CHECK(!IsValidPeginWitness(witness, prevout));
+        BOOST_CHECK(!IsValidPeginWitness(witness, prevout, false));
     }
     witness.stack = witness_stack;
 
     // Extra element causes failure
     witness.stack.push_back(witness.stack.back());
-    BOOST_CHECK(!IsValidPeginWitness(witness, prevout));
+    BOOST_CHECK(!IsValidPeginWitness(witness, prevout, false));
     witness.stack = witness_stack;
 
     // Check validation of peg-in transaction's inputs and balance
@@ -96,13 +96,13 @@ BOOST_AUTO_TEST_CASE(witness_valid)
     BOOST_CHECK(tx.vin[0].m_is_pegin);
     // Check that serialization doesn't cause issuance to become non-null
     BOOST_CHECK(tx.vin[0].assetIssuance.IsNull());
-    BOOST_CHECK(IsValidPeginWitness(tx.wit.vtxinwit[0].m_pegin_witness, prevout));
+    BOOST_CHECK(IsValidPeginWitness(tx.wit.vtxinwit[0].m_pegin_witness, prevout, false));
 
     std::set<std::pair<uint256, COutPoint> > setPeginsSpent;
     CValidationState state;
     CCoinsView coinsDummy;
     CCoinsViewCache coins(&coinsDummy);
-    BOOST_CHECK(Consensus::CheckTxInputs(tx, state, coins, 0, setPeginsSpent, nullptr, false, true));
+    BOOST_CHECK(Consensus::CheckTxInputs(tx, state, coins, 0, setPeginsSpent, nullptr, false, true, false));
     BOOST_CHECK(setPeginsSpent.size() == 1);
     setPeginsSpent.clear();
 
@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE(witness_valid)
     CMutableTransaction mtxn(tx);
     mtxn.wit.vtxinwit[0].m_pegin_witness.SetNull();
     CTransaction tx2(mtxn);
-    BOOST_CHECK(!Consensus::CheckTxInputs(tx2, state, coins, 0, setPeginsSpent, nullptr, false, true));
+    BOOST_CHECK(!Consensus::CheckTxInputs(tx2, state, coins, 0, setPeginsSpent, nullptr, false, true, false));
     BOOST_CHECK(setPeginsSpent.empty());
 
     // Invalidate peg-in (and spending) authorization by pegin marker.
@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(witness_valid)
     CMutableTransaction mtxn2(tx);
     mtxn2.vin[0].m_is_pegin = false;
     CTransaction tx3(mtxn2);
-    BOOST_CHECK(!Consensus::CheckTxInputs(tx3, state, coins, 0, setPeginsSpent, nullptr, false, true));
+    BOOST_CHECK(!Consensus::CheckTxInputs(tx3, state, coins, 0, setPeginsSpent, nullptr, false, true, false));
     BOOST_CHECK(setPeginsSpent.empty());
 
 
