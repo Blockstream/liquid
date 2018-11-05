@@ -518,7 +518,7 @@ class CTTest (BitcoinTestFramework):
             unblinded_destinations[self.nodes[0].validateaddress(self.nodes[0].getnewaddress())["unconfidential"]] = 2
         self.nodes[0].sendmany("", unblinded_destinations, 0)
         self.nodes[0].generate(1)
-        txid = self.nodes[0].sendmany("", {self.nodes[0].getnewaddress():self.nodes[0].getbalance()["bitcoin"]/2 - 1, self.nodes[0].getnewaddress():self.nodes[0].getbalance()["bitcoin"]/2 - 1})
+        txid = self.nodes[0].sendmany("", {self.nodes[0].getnewaddress():int(self.nodes[0].getbalance()["bitcoin"]/2 - 1), self.nodes[0].getnewaddress(): int(self.nodes[0].getbalance()["bitcoin"]/2 - 1)})
         self.nodes[0].generate(1)
         assert_equal(self.nodes[0].gettransaction(txid)["confirmations"], 1)
 if __name__ == '__main__':
