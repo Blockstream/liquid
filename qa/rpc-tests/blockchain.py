@@ -112,7 +112,8 @@ class BlockchainTest(BitcoinTestFramework):
         assert_equal(res['headers'], 200)
         assert_equal(res['bestblockhash'], besthash)
         assert isinstance(res['mediantime'], int)
-        assert_equal(res['verificationprogress'], 1)
+        # see progress.py test
+        #assert_equal(res['verificationprogress'], 1)
         assert_equal(res['pruned'], False)
         assert 'pruneheight' not in res
         assert 'softforks' not in res

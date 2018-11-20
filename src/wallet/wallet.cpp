@@ -1692,12 +1692,14 @@ CBlockIndex* CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool f
             pindex = chainActive.Next(pindex);
 
         ShowProgress(_("Rescanning..."), 0); // show rescan progress in GUI as dialog or on splashscreen, if -rescan on startup
-        double dProgressStart = GuessVerificationProgress(chainParams.TxData(), pindex);
-        double dProgressTip = GuessVerificationProgress(chainParams.TxData(), chainActive.Tip());
+        double dProgressStart = GuessVerificationProgress(pindex, chainParams.GetConsensus().nPowTargetSpacing);
+        double dProgressTip = GuessVerificationProgress(chainActive.Tip(), chainParams.GetConsensus().nPowTargetSpacing);
         while (pindex)
         {
-            if (pindex->nHeight % 100 == 0 && dProgressTip - dProgressStart > 0.0)
-                ShowProgress(_("Rescanning..."), std::max(1, std::min(99, (int)((GuessVerificationProgress(chainParams.TxData(), pindex) - dProgressStart) / (dProgressTip - dProgressStart) * 100))));
+            if (pindex->nHeight % 100 == 0 && dProgressTip - dProgressStart > 0.0) {
+                double progress = GuessVerificationProgress(pindex, chainParams.GetConsensus().nPowTargetSpacing);
+                ShowProgress(_("Rescanning..."), std::max(1, std::min(99, (int)((progress - dProgressStart) / (dProgressTip - dProgressStart) * 100))));
+            }
 
             CBlock block;
             if (ReadBlockFromDisk(block, pindex, Params().GetConsensus())) {
@@ -1713,7 +1715,8 @@ CBlockIndex* CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool f
             pindex = chainActive.Next(pindex);
             if (GetTime() >= nNow + 60) {
                 nNow = GetTime();
-                LogPrintf("Still rescanning. At block %d. Progress=%f\n", pindex->nHeight, GuessVerificationProgress(chainParams.TxData(), pindex));
+                double progress = GuessVerificationProgress(pindex, chainParams.GetConsensus().nPowTargetSpacing);
+                LogPrintf("Still rescanning. At block %d. Progress=%f\n", pindex->nHeight, progress);
             }
         }
         ShowProgress(_("Rescanning..."), 100); // hide progress dialog in GUI
