@@ -39,7 +39,7 @@ std::unique_ptr<CBaseChainParams> CreateBaseChainParams(const std::string& chain
     else if (chain == CHAINPARAMS_LIQUID)
         return std::unique_ptr<CBaseChainParams>(new CBaseChainParams(chain, 10099, 8332));
     else if (chain == CHAINPARAMS_LIQUIDV1)
-        return std::unique_ptr<CBaseChainParams>(new CBaseChainParams(chain, 7041, 18332));
+        return std::unique_ptr<CBaseChainParams>(new CBaseChainParams(chain, 7041, 8332));
     return std::unique_ptr<CBaseChainParams>(new CBaseChainParams(chain, 7040, 18331));
 }
 
