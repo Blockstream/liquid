@@ -3042,7 +3042,8 @@ void static UpdateTip(CBlockIndex *pindexNew, const CChainParams& chainParams) {
       chainActive.Tip()->GetBlockHash().ToString(), chainActive.Height(), chainActive.Tip()->nVersion,
       log(chainActive.Tip()->nChainWork.getdouble())/log(2.0), (unsigned long)chainActive.Tip()->nChainTx,
       DateTimeStrFormat("%Y-%m-%d %H:%M:%S", chainActive.Tip()->GetBlockTime()),
-      GuessVerificationProgress(chainParams.TxData(), chainActive.Tip()), pcoinsTip->DynamicMemoryUsage() * (1.0 / (1<<20)), pcoinsTip->GetCacheSize());
+      GuessVerificationProgress(chainActive.Tip(), chainParams.GetConsensus().nPowTargetSpacing),
+      pcoinsTip->DynamicMemoryUsage() * (1.0 / (1<<20)), pcoinsTip->GetCacheSize());
     if (!warningMessages.empty())
         LogPrintf(" warning='%s'", boost::algorithm::join(warningMessages, ", "));
     LogPrintf("\n");
@@ -4609,10 +4610,10 @@ bool static LoadBlockIndexDB(const CChainParams& chainparams)
 
     PruneBlockIndexCandidates();
 
-    LogPrintf("%s: hashBestChain=%s height=%d date=%s progress=%f\n", __func__,
+    LogPrintf("%s: hashBestChain=%s height=%d date=%s progress=%.3f\n", __func__,
         chainActive.Tip()->GetBlockHash().ToString(), chainActive.Height(),
         DateTimeStrFormat("%Y-%m-%d %H:%M:%S", chainActive.Tip()->GetBlockTime()),
-        GuessVerificationProgress(chainparams.TxData(), chainActive.Tip()));
+        GuessVerificationProgress(chainActive.Tip(), chainparams.GetConsensus().nPowTargetSpacing));
 
     return true;
 }
@@ -5317,22 +5318,21 @@ void DumpMempool(void)
     }
 }
 
-//! Guess how far we are in the verification process at the given block index
-double GuessVerificationProgress(const ChainTxData& data, CBlockIndex *pindex) {
-    if (pindex == NULL)
+// Guess how far we are in the verification process at the given block index.
+// Since we have signed fixed-interval blocks, estimating progress is a very easy.
+// We can extrapolate the last block time to the current time to estimate how many more blocks
+// we expect.
+double GuessVerificationProgress(CBlockIndex *pindex, int64_t blockInterval) {
+    if (pindex == NULL || pindex->nHeight < 1)
         return 0.0;
 
-    int64_t nNow = time(NULL);
-
-    double fTxTotal;
-
-    if (pindex->nChainTx <= data.nTxCount) {
-        fTxTotal = data.nTxCount + (nNow - data.nTime) * data.dTxRate;
-    } else {
-        fTxTotal = pindex->nChainTx + (nNow - pindex->GetBlockTime()) * data.dTxRate;
-    }
-
-    return pindex->nChainTx / fTxTotal;
+    int64_t nNow = GetTime();
+    int64_t moreBlocksExpected = (nNow - pindex->GetBlockTime()) / blockInterval;
+    double progress = (pindex->nHeight + 0.0) / (pindex->nHeight + moreBlocksExpected);
+    // Round to 3 digits to avoid 0.999999 when finished.
+    progress = ceil(progress * 1000.0) / 1000.0;
+    // Avoid higher than one if last block is newer than current time.
+    return std::min(1.0, progress);
 }
 
 class CMainCleanup

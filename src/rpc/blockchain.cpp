@@ -19,6 +19,7 @@
 #include "sync.h"
 #include "txmempool.h"
 #include "util.h"
+#include "utiltime.h"
 #include "utilstrencodings.h"
 #include "hash.h"
 
@@ -1048,6 +1049,7 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
             "  \"bestblockhash\": \"...\", (string) the hash of the currently best block\n"
             "  \"mediantime\": xxxxxx,     (numeric) median time for the current best block\n"
             "  \"verificationprogress\": xxxx, (numeric) estimate of verification progress [0..1]\n"
+            "  \"initialblockdownload\": xx,  (boolean) whether or not the initial block download is still ongoing\n"
             "  \"pruned\": xx,             (boolean) if the blocks are subject to pruning\n"
             "  \"pruneheight\": xxxxxx,    (numeric) lowest-height complete block stored\n"
             "  \"bip9_softforks\": {          (object) status of BIP9 softforks in progress\n"
@@ -1074,10 +1076,11 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
     obj.push_back(Pair("headers",               pindexBestHeader ? pindexBestHeader->nHeight : -1));
     obj.push_back(Pair("bestblockhash",         tip->GetBlockHash().GetHex()));
     obj.push_back(Pair("mediantime",            (int64_t)tip->GetMedianTimePast()));
-    obj.push_back(Pair("verificationprogress",  GuessVerificationProgress(Params().TxData(), tip)));
+    obj.push_back(Pair("verificationprogress",  GuessVerificationProgress(tip, Params().GetConsensus().nPowTargetSpacing)));
     obj.push_back(Pair("pruned",                fPruneMode));
     obj.push_back(Pair("signblock_asm", ScriptToAsmStr(tip->proof.challenge)));
     obj.push_back(Pair("signblock_hex", HexStr(tip->proof.challenge.begin(), tip->proof.challenge.end())));
+    obj.push_back(Pair("initialblockdownload",  IsInitialBlockDownload()));
 
     const Consensus::Params& consensusParams = Params().GetConsensus();
     UniValue bip9_softforks(UniValue::VOBJ);

@@ -166,6 +166,7 @@ testScripts = [
     'p2p-leaktests.py',
     'pak_tests.py',
     'signed_blockchain.py',
+    'progress.py',
 ]
 if ENABLE_ZMQ:
     testScripts.append('zmq_test.py')
