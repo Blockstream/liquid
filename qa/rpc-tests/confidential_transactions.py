@@ -475,7 +475,7 @@ class CTTest (BitcoinTestFramework):
         unblinded = self.nodes[0].validateaddress(self.nodes[0].getnewaddress())["unconfidential"]
         self.nodes[0].sendtoaddress(unblinded, self.nodes[0].getbalance()["bitcoin"], "", "", True)
         # Make tx with blinded destination and change outputs only
-        self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), self.nodes[0].getbalance()["bitcoin"]/2)
+        self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), round(self.nodes[0].getbalance()["bitcoin"]/2, 8))
         # Send back again, this transaction should have 3 outputs, all unblinded
         txid = self.nodes[0].sendtoaddress(unblinded, self.nodes[0].getbalance()["bitcoin"], "", "", True)
         outputs = self.nodes[0].getrawtransaction(txid, 1)["vout"]
