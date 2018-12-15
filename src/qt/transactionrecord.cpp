@@ -42,7 +42,23 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
     uint256 hash = wtx.GetHash();
     std::map<std::string, std::string> mapValue = wtx.mapValue;
 
-    if (nNet > 0 || wtx.IsCoinBase())
+    bool involvesWatchAddress = false;
+    isminetype fAllFromMe = ISMINE_SPENDABLE;
+    bool any_from_me = false;
+    if (wtx.IsCoinBase()) {
+        fAllFromMe = ISMINE_NO;
+    } else {
+        any_from_me = false;
+        BOOST_FOREACH(const CTxIn& txin, wtx.tx->vin)
+        {
+            isminetype mine = wallet->IsMine(txin);
+            if(mine & ISMINE_WATCH_ONLY) involvesWatchAddress = true;
+            if(fAllFromMe > mine) fAllFromMe = mine;
+            if (mine) any_from_me = true;
+        }
+    }
+
+    if (!any_from_me)
     {
         //
         // Credit
@@ -83,15 +99,6 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
     }
     else
     {
-        bool involvesWatchAddress = false;
-        isminetype fAllFromMe = ISMINE_SPENDABLE;
-        BOOST_FOREACH(const CTxIn& txin, wtx.tx->vin)
-        {
-            isminetype mine = wallet->IsMine(txin);
-            if(mine & ISMINE_WATCH_ONLY) involvesWatchAddress = true;
-            if(fAllFromMe > mine) fAllFromMe = mine;
-        }
-
         isminetype fAllToMe = ISMINE_SPENDABLE;
         BOOST_FOREACH(const CTxOut& txout, wtx.tx->vout)
         {
