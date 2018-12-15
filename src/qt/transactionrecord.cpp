@@ -130,7 +130,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
             {
                 const CTxOut& txout = wtx.tx->vout[nOut];
 
-                if(wallet->IsMine(txout))
+                if(wallet->IsMine(txout) || txout.scriptPubKey == CScript() /* explicit fee */)
                 {
                     // Ignore parts sent to self, as this is usually the change
                     // from a transaction sent back to our own address.
