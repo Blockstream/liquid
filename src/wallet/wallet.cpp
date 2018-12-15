@@ -2175,6 +2175,19 @@ void CWalletTx::GetIssuanceAssets(unsigned int vinIndex, CAsset* out_asset, CAss
     }
 }
 
+CAmountMap CWalletTx::GetIssuanceAssets(unsigned int vinIndex) const {
+    CAmountMap ret;
+    CAsset asset, token;
+    GetIssuanceAssets(vinIndex, &asset, &token);
+    if (!asset.IsNull()) {
+        ret[asset] = GetIssuanceAmount(vinIndex, false);
+    }
+    if (!token.IsNull()) {
+        ret[token] = GetIssuanceAmount(vinIndex, true);
+    }
+    return ret;
+}
+
 uint256 CWalletTx::GetIssuanceBlindingFactor(unsigned int vinIndex, bool fIssuanceToken) const {
     assert(vinIndex < tx->vin.size());
     CAsset asset;

@@ -470,6 +470,7 @@ public:
     CPubKey GetOutputBlindingPubKey(unsigned int nOut) const;
     //! Get the issuance CAssets for both the asset itself and the issuing tokens
     void GetIssuanceAssets(unsigned int vinIndex, CAsset* out_asset, CAsset* out_reissuance_token) const;
+    CAmountMap GetIssuanceAssets(unsigned int vinIndex) const;
     //! Get the issuance blinder for either the asset itself or the issuing tokens
     uint256 GetIssuanceBlindingFactor(unsigned int vinIndex, bool fIssuanceToken) const;
     //! Get the issuance amount for either the asset itself or the issuing tokens
