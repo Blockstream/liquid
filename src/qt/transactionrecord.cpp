@@ -42,9 +42,27 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
     bool involvesWatchAddress = false;
     isminetype fAllFromMe = ISMINE_SPENDABLE;
     bool any_from_me = false;
+    std::set<CAsset> assets_issued_to_me_only;
     if (wtx.IsCoinBase()) {
         fAllFromMe = ISMINE_NO;
     } else {
+        CAmountMap assets_received_by_me_only;
+        for (unsigned int i = 0; i < wtx.tx->vout.size(); i++)
+        {
+            const CTxOut& txout = wtx.tx->vout[i];
+            CAsset asset = wtx.GetOutputAsset(i);
+            if (assets_received_by_me_only.count(asset) && assets_received_by_me_only.at(asset) < 0) {
+                // Already known to be received by not-me
+                continue;
+            }
+            isminetype mine = wallet->IsMine(txout);
+            if (!mine) {
+                assets_received_by_me_only[asset] = -1;
+            } else {
+                assets_received_by_me_only[asset] += wtx.GetOutputValueOut(i);
+            }
+        }
+
         any_from_me = false;
         for (size_t i = 0; i < wtx.tx->vin.size(); ++i)
         {
@@ -56,6 +74,15 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
 
             CAmountMap assets = wtx.GetIssuanceAssets(i);
             for (const auto& asset : assets) {
+                if (assets_received_by_me_only.count(asset.first) == 0) {
+                    continue;
+                }
+                if (asset.second == assets_received_by_me_only.at(asset.first)) {
+                    // Special case: collapse the chain of issue, send, receive to just an issue
+                    assets_issued_to_me_only.insert(asset.first);
+                    continue;
+                }
+
                 TransactionRecord sub(hash, nTime);
                 sub.involvesWatchAddress = involvesWatchAddress;
                 sub.asset = asset.first;
@@ -82,7 +109,9 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 continue;
             }
 
-            if (fAllFromMe) {
+            CAsset asset = wtx.GetOutputAsset(i);
+
+            if (fAllFromMe && assets_issued_to_me_only.count(asset) == 0) {
                 //
                 // Debit
                 //
@@ -90,7 +119,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 TransactionRecord sub(hash, nTime);
                 sub.idx = i;
                 sub.involvesWatchAddress = involvesWatchAddress;
-                sub.asset = wtx.GetOutputAsset(i);
+                sub.asset = asset;
                 sub.amount = -wtx.GetOutputValueOut(i);
 
                 CTxDestination address;
@@ -120,7 +149,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 TransactionRecord sub(hash, nTime);
                 CTxDestination address;
                 sub.idx = i; // vout index
-                sub.asset = wtx.GetOutputAsset(i);
+                sub.asset = asset;
                 sub.amount = wtx.GetOutputValueOut(i);
                 sub.involvesWatchAddress = mine & ISMINE_WATCH_ONLY;
                 if (ExtractDestination(txout.scriptPubKey, address) && IsMine(*wallet, address))
@@ -139,6 +168,9 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 {
                     // Generated
                     sub.type = TransactionRecord::Generated;
+                }
+                if (assets_issued_to_me_only.count(asset)) {
+                    sub.type = TransactionRecord::IssuedAsset;
                 }
 
                 parts.append(sub);
