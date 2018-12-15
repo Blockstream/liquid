@@ -196,11 +196,32 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
         pindex = (*mi).second;
 
     // Sort order, unrecorded transactions sort to the top
-    status.sortKey = strprintf("%010d-%01d-%010u-%03d",
+    int typesort;
+    switch (type) {
+    case Fee:
+        typesort = 0;
+        break;
+    case IssuedAsset:
+        typesort = 1;
+        break;
+    case SendToAddress:
+    case SendToOther:
+    case SendToSelf:
+        typesort = 2;
+        break;
+    case RecvWithAddress:
+    case RecvFromOther:
+        typesort = 3;
+        break;
+    default:
+        typesort = 10;
+    }
+    status.sortKey = strprintf("%010d-%01d-%010u-%03d-%d",
         (pindex ? pindex->nHeight : std::numeric_limits<int>::max()),
         (wtx.IsCoinBase() ? 1 : 0),
         wtx.nTimeReceived,
-        idx);
+        idx,
+        typesort);
     status.countsForBalance = wtx.IsTrusted() && !(wtx.GetBlocksToMaturity() > 0);
     status.depth = wtx.GetDepthInMainChain();
     status.cur_num_blocks = chainActive.Height();
