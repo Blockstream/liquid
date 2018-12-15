@@ -13,7 +13,9 @@
 #include "transactionrecord.h"
 #include "walletmodel.h"
 
+#include "assetsdir.h"
 #include "core_io.h"
+#include "global/common.h"
 #include "validation.h"
 #include "sync.h"
 #include "uint256.h"
@@ -452,7 +454,22 @@ QVariant TransactionTableModel::addressColor(const TransactionRecord *wtx) const
 
 QString TransactionTableModel::formatTxAmount(const TransactionRecord *wtx, bool showUnconfirmed, BitcoinUnits::SeparatorStyle separators) const
 {
-    QString str = BitcoinUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), wtx->amount, false, separators);
+    QString str;
+    if (wtx->asset == Params().GetConsensus().pegged_asset) {
+        str = BitcoinUnits::formatWithUnit(walletModel->getOptionsModel()->getDisplayUnit(), wtx->amount, false, separators);
+    } else {
+        qlonglong whole = wtx->amount / 100000000;
+        qlonglong fraction = wtx->amount % 100000000;
+        str = QString("%1").arg(whole);
+        if (fraction) {
+            str += QString(".%1").arg(fraction, 8, 10, QLatin1Char('0'));
+        }
+        std::string asset_label = gAssetsDir.GetLabel(wtx->asset);
+        if (asset_label.empty()) {
+            asset_label = wtx->asset.GetHex();
+        }
+        str += QString(" ") + QString::fromStdString(asset_label);
+    }
     if(showUnconfirmed)
     {
         if(!wtx->status.countsForBalance)
