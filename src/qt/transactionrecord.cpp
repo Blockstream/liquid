@@ -38,7 +38,6 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
     int64_t nTime = wtx.GetTxTime();
     CAmount nCredit = wtx.GetCredit(ISMINE_ALL)[Params().GetConsensus().pegged_asset];
     CAmount nDebit = wtx.GetDebit(ISMINE_ALL)[Params().GetConsensus().pegged_asset];
-    CAmount nNet = nCredit - nDebit;
     uint256 hash = wtx.GetHash();
     std::map<std::string, std::string> mapValue = wtx.mapValue;
 
@@ -175,10 +174,14 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
         {
             //
             // Mixed debit transaction, can't break down payees
+            // Just add Unknown-type entries with net differences
             //
-            parts.append(TransactionRecord(hash, nTime, TransactionRecord::Other, "",
-                                           Params().GetConsensus().pegged_asset, nNet));
-            parts.last().involvesWatchAddress = involvesWatchAddress;
+            CAmountMap debits = wtx.GetDebit(ISMINE_ALL);
+            for (const auto& credit : wtx.GetCredit(ISMINE_ALL)) {
+                parts.append(TransactionRecord(hash, nTime, TransactionRecord::Other, "",
+                                            credit.first, credit.second - debits[credit.first]));
+                parts.last().involvesWatchAddress = involvesWatchAddress;
+            }
         }
     }
 
