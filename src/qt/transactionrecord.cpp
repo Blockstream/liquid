@@ -53,25 +53,15 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
             if(mine & ISMINE_WATCH_ONLY) involvesWatchAddress = true;
             if(fAllFromMe > mine) fAllFromMe = mine;
             if (mine) any_from_me = true;
-            if (!txin.assetIssuance.IsNull()) {
-                CAsset asset, token;
-                wtx.GetIssuanceAssets(i, &asset, &token);
-                if (!asset.IsNull()) {
-                    TransactionRecord sub(hash, nTime);
-                    sub.involvesWatchAddress = involvesWatchAddress;
-                    sub.asset = asset;
-                    sub.amount = wtx.GetIssuanceAmount(i, false);
-                    sub.type = TransactionRecord::IssuedAsset;
-                    parts.append(sub);
-                }
-                if (!token.IsNull()) {
-                    TransactionRecord sub(hash, nTime);
-                    sub.involvesWatchAddress = involvesWatchAddress;
-                    sub.asset = token;
-                    sub.amount = wtx.GetIssuanceAmount(i, true);
-                    sub.type = TransactionRecord::IssuedAsset;
-                    parts.append(sub);
-                }
+
+            CAmountMap assets = wtx.GetIssuanceAssets(i);
+            for (const auto& asset : assets) {
+                TransactionRecord sub(hash, nTime);
+                sub.involvesWatchAddress = involvesWatchAddress;
+                sub.asset = asset.first;
+                sub.amount = asset.second;
+                sub.type = TransactionRecord::IssuedAsset;
+                parts.append(sub);
             }
         }
     }
