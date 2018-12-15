@@ -46,12 +46,33 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
         fAllFromMe = ISMINE_NO;
     } else {
         any_from_me = false;
-        BOOST_FOREACH(const CTxIn& txin, wtx.tx->vin)
+        for (size_t i = 0; i < wtx.tx->vin.size(); ++i)
         {
+            const CTxIn& txin = wtx.tx->vin[i];
             isminetype mine = wallet->IsMine(txin);
             if(mine & ISMINE_WATCH_ONLY) involvesWatchAddress = true;
             if(fAllFromMe > mine) fAllFromMe = mine;
             if (mine) any_from_me = true;
+            if (!txin.assetIssuance.IsNull()) {
+                CAsset asset, token;
+                wtx.GetIssuanceAssets(i, &asset, &token);
+                if (!asset.IsNull()) {
+                    TransactionRecord sub(hash, nTime);
+                    sub.involvesWatchAddress = involvesWatchAddress;
+                    sub.asset = asset;
+                    sub.amount = wtx.GetIssuanceAmount(i, false);
+                    sub.type = TransactionRecord::IssuedAsset;
+                    parts.append(sub);
+                }
+                if (!token.IsNull()) {
+                    TransactionRecord sub(hash, nTime);
+                    sub.involvesWatchAddress = involvesWatchAddress;
+                    sub.asset = token;
+                    sub.amount = wtx.GetIssuanceAmount(i, true);
+                    sub.type = TransactionRecord::IssuedAsset;
+                    parts.append(sub);
+                }
+            }
         }
     }
 
