@@ -97,9 +97,9 @@ public:
 
     TransactionRecord(uint256 _hash, qint64 _time,
                 Type _type, const std::string &_address,
-                const CAmount& _amount):
+                const CAsset& _asset, const CAmount& _amount):
             hash(_hash), time(_time), type(_type), address(_address),
-            amount(_amount),
+            asset(_asset), amount(_amount),
             idx(0)
     {
     }
@@ -115,6 +115,7 @@ public:
     qint64 time;
     Type type;
     std::string address;
+    CAsset asset;
     CAmount amount;
     /**@}*/
 
