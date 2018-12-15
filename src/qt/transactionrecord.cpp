@@ -160,13 +160,13 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 parts.append(sub);
             }
 
-            CAmount nTxFee = wtx.tx->GetFee()[Params().GetConsensus().pegged_asset];
-            
-            if (nTxFee > 0) {
+            for (const auto& tx_fee : wtx.tx->GetFee()) {
+                if (!tx_fee.second) continue;
+                
                 TransactionRecord sub(hash, nTime);
                 sub.type = TransactionRecord::Fee;
-                sub.asset = Params().GetConsensus().pegged_asset;
-                sub.amount = -nTxFee;
+                sub.asset = tx_fee.first;
+                sub.amount = -tx_fee.second;
                 parts.append(sub);
             }
         }
