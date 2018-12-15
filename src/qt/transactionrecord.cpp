@@ -36,8 +36,6 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
 {
     QList<TransactionRecord> parts;
     int64_t nTime = wtx.GetTxTime();
-    CAmount nCredit = wtx.GetCredit(ISMINE_ALL)[Params().GetConsensus().pegged_asset];
-    CAmount nDebit = wtx.GetDebit(ISMINE_ALL)[Params().GetConsensus().pegged_asset];
     uint256 hash = wtx.GetHash();
     std::map<std::string, std::string> mapValue = wtx.mapValue;
 
@@ -57,17 +55,57 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
         }
     }
 
-    if (!any_from_me)
+    if (fAllFromMe || !any_from_me)
     {
-        //
-        // Credit
-        //
+        BOOST_FOREACH(const CTxOut& txout, wtx.tx->vout)
+        {
+            isminetype mine = wallet->IsMine(txout);
+            if(mine & ISMINE_WATCH_ONLY) involvesWatchAddress = true;
+        }
+
         for (unsigned int i = 0; i < wtx.tx->vout.size(); i++)
         {
             const CTxOut& txout = wtx.tx->vout[i];
+
+            if (wallet->IsChange(txout) || txout.scriptPubKey == CScript() /* explicit fee */) {
+                continue;
+            }
+
+            if (fAllFromMe) {
+                //
+                // Debit
+                //
+
+                TransactionRecord sub(hash, nTime);
+                sub.idx = i;
+                sub.involvesWatchAddress = involvesWatchAddress;
+                sub.asset = wtx.GetOutputAsset(i);
+                sub.amount = -wtx.GetOutputValueOut(i);
+
+                CTxDestination address;
+                if (ExtractDestination(txout.scriptPubKey, address))
+                {
+                    // Sent to Bitcoin Address
+                    sub.type = TransactionRecord::SendToAddress;
+                    sub.address = CBitcoinAddress(address).ToString();
+                }
+                else
+                {
+                    // Sent to IP, or other non-address transaction like OP_EVAL
+                    sub.type = TransactionRecord::SendToOther;
+                    sub.address = mapValue["to"];
+                }
+
+                parts.append(sub);
+            }
+
             isminetype mine = wallet->IsMine(txout);
             if(mine)
             {
+                //
+                // Credit
+                //
+
                 TransactionRecord sub(hash, nTime);
                 CTxDestination address;
                 sub.idx = i; // vout index
@@ -95,71 +133,8 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 parts.append(sub);
             }
         }
-    }
-    else
-    {
-        isminetype fAllToMe = ISMINE_SPENDABLE;
-        BOOST_FOREACH(const CTxOut& txout, wtx.tx->vout)
-        {
-            if (txout.scriptPubKey == CScript()) {
-                // explicit fee; ignore
-                continue;
-            }
-            isminetype mine = wallet->IsMine(txout);
-            if(mine & ISMINE_WATCH_ONLY) involvesWatchAddress = true;
-            if(fAllToMe > mine) fAllToMe = mine;
-        }
-
-        if (fAllFromMe && fAllToMe)
-        {
-            // Payment to self
-            CAmount nChange = wtx.GetChange()[Params().GetConsensus().pegged_asset];
-
-            parts.append(TransactionRecord(hash, nTime, TransactionRecord::SendToSelf, "",
-                                           Params().GetConsensus().pegged_asset,
-                            -(nDebit - nChange) + (nCredit - nChange)));
-            parts.last().involvesWatchAddress = involvesWatchAddress;   // maybe pass to TransactionRecord as constructor argument
-        }
-        else if (fAllFromMe)
-        {
-            //
-            // Debit
-            //
-
-            for (unsigned int nOut = 0; nOut < wtx.tx->vout.size(); nOut++)
-            {
-                const CTxOut& txout = wtx.tx->vout[nOut];
-
-                if(wallet->IsMine(txout) || txout.scriptPubKey == CScript() /* explicit fee */)
-                {
-                    // Ignore parts sent to self, as this is usually the change
-                    // from a transaction sent back to our own address.
-                    continue;
-                }
-
-                TransactionRecord sub(hash, nTime);
-                sub.idx = nOut;
-                sub.involvesWatchAddress = involvesWatchAddress;
-                sub.asset = wtx.GetOutputAsset(nOut);
-                sub.amount = -wtx.GetOutputValueOut(nOut);
-
-                CTxDestination address;
-                if (ExtractDestination(txout.scriptPubKey, address))
-                {
-                    // Sent to Bitcoin Address
-                    sub.type = TransactionRecord::SendToAddress;
-                    sub.address = CBitcoinAddress(address).ToString();
-                }
-                else
-                {
-                    // Sent to IP, or other non-address transaction like OP_EVAL
-                    sub.type = TransactionRecord::SendToOther;
-                    sub.address = mapValue["to"];
-                }
-
-                parts.append(sub);
-            }
-
+        
+        if (fAllFromMe) {
             for (const auto& tx_fee : wtx.tx->GetFee()) {
                 if (!tx_fee.second) continue;
                 
@@ -170,8 +145,9 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 parts.append(sub);
             }
         }
-        else
-        {
+    }
+    else
+    {
             //
             // Mixed debit transaction, can't break down payees
             // Just add Unknown-type entries with net differences
@@ -182,7 +158,6 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                                             credit.first, credit.second - debits[credit.first]));
                 parts.last().involvesWatchAddress = involvesWatchAddress;
             }
-        }
     }
 
     return parts;
