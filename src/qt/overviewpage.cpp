@@ -152,28 +152,28 @@ OverviewPage::~OverviewPage()
 
 void OverviewPage::updateBalance()
 {
-    const CAmount balance = walletModel->getBalance()[Params().GetConsensus().pegged_asset];
-    const CAmount unconfirmedBalance = walletModel->getUnconfirmedBalance()[Params().GetConsensus().pegged_asset];
-    const CAmount immatureBalance = walletModel->getImmatureBalance()[Params().GetConsensus().pegged_asset];
-    const CAmount watchOnlyBalance = walletModel->getWatchBalance()[Params().GetConsensus().pegged_asset];
-    const CAmount watchUnconfBalance = walletModel->getWatchUnconfirmedBalance()[Params().GetConsensus().pegged_asset];
-    const CAmount watchImmatureBalance = walletModel->getWatchImmatureBalance()[Params().GetConsensus().pegged_asset];
+    const CAmountMap balance = walletModel->getBalance();
+    const CAmountMap unconfirmedBalance = walletModel->getUnconfirmedBalance();
+    const CAmountMap immatureBalance = walletModel->getImmatureBalance();
+    const CAmountMap watchOnlyBalance = walletModel->getWatchBalance();
+    const CAmountMap watchUnconfBalance = walletModel->getWatchUnconfirmedBalance();
+    const CAmountMap watchImmatureBalance = walletModel->getWatchImmatureBalance();
     
     int unit = walletModel->getOptionsModel()->getDisplayUnit();
     balances_initialised = true;
-    ui->labelBalance->setText(BitcoinUnits::formatWithUnit(unit, balance, false, BitcoinUnits::separatorAlways));
-    ui->labelUnconfirmed->setText(BitcoinUnits::formatWithUnit(unit, unconfirmedBalance, false, BitcoinUnits::separatorAlways));
-    ui->labelImmature->setText(BitcoinUnits::formatWithUnit(unit, immatureBalance, false, BitcoinUnits::separatorAlways));
-    ui->labelTotal->setText(BitcoinUnits::formatWithUnit(unit, balance + unconfirmedBalance + immatureBalance, false, BitcoinUnits::separatorAlways));
-    ui->labelWatchAvailable->setText(BitcoinUnits::formatWithUnit(unit, watchOnlyBalance, false, BitcoinUnits::separatorAlways));
-    ui->labelWatchPending->setText(BitcoinUnits::formatWithUnit(unit, watchUnconfBalance, false, BitcoinUnits::separatorAlways));
-    ui->labelWatchImmature->setText(BitcoinUnits::formatWithUnit(unit, watchImmatureBalance, false, BitcoinUnits::separatorAlways));
-    ui->labelWatchTotal->setText(BitcoinUnits::formatWithUnit(unit, watchOnlyBalance + watchUnconfBalance + watchImmatureBalance, false, BitcoinUnits::separatorAlways));
+    ui->labelBalance->setText(GUIUtil::formatMultiAssetAmount(balance, unit, BitcoinUnits::separatorAlways, "\n"));
+    ui->labelUnconfirmed->setText(GUIUtil::formatMultiAssetAmount(unconfirmedBalance, unit, BitcoinUnits::separatorAlways, "\n"));
+    ui->labelImmature->setText(GUIUtil::formatMultiAssetAmount(immatureBalance, unit, BitcoinUnits::separatorAlways, "\n"));
+    ui->labelTotal->setText(GUIUtil::formatMultiAssetAmount(balance + unconfirmedBalance + immatureBalance, unit, BitcoinUnits::separatorAlways, "\n"));
+    ui->labelWatchAvailable->setText(GUIUtil::formatMultiAssetAmount(watchOnlyBalance, unit, BitcoinUnits::separatorAlways, "\n"));
+    ui->labelWatchPending->setText(GUIUtil::formatMultiAssetAmount(watchUnconfBalance, unit, BitcoinUnits::separatorAlways, "\n"));
+    ui->labelWatchImmature->setText(GUIUtil::formatMultiAssetAmount(watchImmatureBalance, unit, BitcoinUnits::separatorAlways, "\n"));
+    ui->labelWatchTotal->setText(GUIUtil::formatMultiAssetAmount(watchOnlyBalance + watchUnconfBalance + watchImmatureBalance, unit, BitcoinUnits::separatorAlways, "\n"));
 
     // only show immature (newly mined) balance if it's non-zero, so as not to complicate things
     // for the non-mining users
-    bool showImmature = immatureBalance != 0;
-    bool showWatchOnlyImmature = watchImmatureBalance != 0;
+    bool showImmature = !immatureBalance.empty();
+    bool showWatchOnlyImmature = !watchImmatureBalance.empty();
 
     // for symmetry reasons also show immature label when the watch-only one is shown
     ui->labelImmature->setVisible(showImmature || showWatchOnlyImmature);
