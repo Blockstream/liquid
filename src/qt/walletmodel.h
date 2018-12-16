@@ -130,12 +130,12 @@ public:
     RecentRequestsTableModel *getRecentRequestsTableModel();
 
     CAmountMap getBalance(const CCoinControl *coinControl = NULL) const;
-    CAmount getUnconfirmedBalance() const;
-    CAmount getImmatureBalance() const;
+    CAmountMap getUnconfirmedBalance() const;
+    CAmountMap getImmatureBalance() const;
     bool haveWatchOnly() const;
-    CAmount getWatchBalance() const;
-    CAmount getWatchUnconfirmedBalance() const;
-    CAmount getWatchImmatureBalance() const;
+    CAmountMap getWatchBalance() const;
+    CAmountMap getWatchUnconfirmedBalance() const;
+    CAmountMap getWatchImmatureBalance() const;
     EncryptionStatus getEncryptionStatus() const;
 
     // Check address for validity
@@ -228,11 +228,11 @@ private:
 
     // Cache some values to be able to detect changes
     CAmountMap cachedBalance;
-    CAmount cachedUnconfirmedBalance;
-    CAmount cachedImmatureBalance;
-    CAmount cachedWatchOnlyBalance;
-    CAmount cachedWatchUnconfBalance;
-    CAmount cachedWatchImmatureBalance;
+    CAmountMap cachedUnconfirmedBalance;
+    CAmountMap cachedImmatureBalance;
+    CAmountMap cachedWatchOnlyBalance;
+    CAmountMap cachedWatchUnconfBalance;
+    CAmountMap cachedWatchImmatureBalance;
     EncryptionStatus cachedEncryptionStatus;
     int cachedNumBlocks;
 

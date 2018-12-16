@@ -153,11 +153,11 @@ OverviewPage::~OverviewPage()
 void OverviewPage::updateBalance()
 {
     const CAmount balance = walletModel->getBalance()[Params().GetConsensus().pegged_asset];
-    const CAmount unconfirmedBalance = walletModel->getUnconfirmedBalance();
-    const CAmount immatureBalance = walletModel->getImmatureBalance();
-    const CAmount watchOnlyBalance = walletModel->getWatchBalance();
-    const CAmount watchUnconfBalance = walletModel->getWatchUnconfirmedBalance();
-    const CAmount watchImmatureBalance = walletModel->getWatchImmatureBalance();
+    const CAmount unconfirmedBalance = walletModel->getUnconfirmedBalance()[Params().GetConsensus().pegged_asset];
+    const CAmount immatureBalance = walletModel->getImmatureBalance()[Params().GetConsensus().pegged_asset];
+    const CAmount watchOnlyBalance = walletModel->getWatchBalance()[Params().GetConsensus().pegged_asset];
+    const CAmount watchUnconfBalance = walletModel->getWatchUnconfirmedBalance()[Params().GetConsensus().pegged_asset];
+    const CAmount watchImmatureBalance = walletModel->getWatchImmatureBalance()[Params().GetConsensus().pegged_asset];
     
     int unit = walletModel->getOptionsModel()->getDisplayUnit();
     balances_initialised = true;

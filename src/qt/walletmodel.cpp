@@ -34,7 +34,6 @@ WalletModel::WalletModel(const PlatformStyle *platformStyle, CWallet *_wallet, O
     QObject(parent), wallet(_wallet), optionsModel(_optionsModel), addressTableModel(0),
     transactionTableModel(0),
     recentRequestsTableModel(0),
-    cachedUnconfirmedBalance(0), cachedImmatureBalance(0),
     cachedEncryptionStatus(Unencrypted),
     cachedNumBlocks(0)
 {
@@ -75,14 +74,14 @@ CAmountMap WalletModel::getBalance(const CCoinControl *coinControl) const
     return wallet->GetBalance();
 }
 
-CAmount WalletModel::getUnconfirmedBalance() const
+CAmountMap WalletModel::getUnconfirmedBalance() const
 {
-    return wallet->GetUnconfirmedBalance()[Params().GetConsensus().pegged_asset];
+    return wallet->GetUnconfirmedBalance();
 }
 
-CAmount WalletModel::getImmatureBalance() const
+CAmountMap WalletModel::getImmatureBalance() const
 {
-    return wallet->GetImmatureBalance()[Params().GetConsensus().pegged_asset];
+    return wallet->GetImmatureBalance();
 }
 
 bool WalletModel::haveWatchOnly() const
@@ -90,19 +89,19 @@ bool WalletModel::haveWatchOnly() const
     return fHaveWatchOnly;
 }
 
-CAmount WalletModel::getWatchBalance() const
+CAmountMap WalletModel::getWatchBalance() const
 {
-    return wallet->GetWatchOnlyBalance()[Params().GetConsensus().pegged_asset];
+    return wallet->GetWatchOnlyBalance();
 }
 
-CAmount WalletModel::getWatchUnconfirmedBalance() const
+CAmountMap WalletModel::getWatchUnconfirmedBalance() const
 {
-    return wallet->GetUnconfirmedWatchOnlyBalance()[Params().GetConsensus().pegged_asset];
+    return wallet->GetUnconfirmedWatchOnlyBalance();
 }
 
-CAmount WalletModel::getWatchImmatureBalance() const
+CAmountMap WalletModel::getWatchImmatureBalance() const
 {
-    return wallet->GetImmatureWatchOnlyBalance()[Params().GetConsensus().pegged_asset];
+    return wallet->GetImmatureWatchOnlyBalance();
 }
 
 void WalletModel::updateStatus()
@@ -141,11 +140,11 @@ void WalletModel::pollBalanceChanged()
 void WalletModel::checkBalanceChanged()
 {
     CAmountMap newBalance = getBalance();
-    CAmount newUnconfirmedBalance = getUnconfirmedBalance();
-    CAmount newImmatureBalance = getImmatureBalance();
-    CAmount newWatchOnlyBalance = 0;
-    CAmount newWatchUnconfBalance = 0;
-    CAmount newWatchImmatureBalance = 0;
+    CAmountMap newUnconfirmedBalance = getUnconfirmedBalance();
+    CAmountMap newImmatureBalance = getImmatureBalance();
+    CAmountMap newWatchOnlyBalance;
+    CAmountMap newWatchUnconfBalance;
+    CAmountMap newWatchImmatureBalance;
     if (haveWatchOnly())
     {
         newWatchOnlyBalance = getWatchBalance();
