@@ -9,6 +9,8 @@
 #include "qvalidatedlineedit.h"
 #include "walletmodel.h"
 
+#include "assetsdir.h"
+#include "global/common.h"
 #include "primitives/transaction.h"
 #include "init.h"
 #include "policy/policy.h"
@@ -878,6 +880,26 @@ QString boostPathToQString(const boost::filesystem::path &path)
     return QString::fromStdString(path.string());
 }
 #endif
+
+QString formatAssetAmount(const CAsset& asset, const CAmount& amount, const int bitcoin_unit, BitcoinUnits::SeparatorStyle separators)
+{
+    if (asset == Params().GetConsensus().pegged_asset) {
+        return BitcoinUnits::formatWithUnit(bitcoin_unit, amount, false, separators);
+    }
+
+    qlonglong whole = amount / 100000000;
+    qlonglong fraction = amount % 100000000;
+    QString str = QString("%1").arg(whole);
+    if (fraction) {
+        str += QString(".%1").arg(fraction, 8, 10, QLatin1Char('0'));
+    }
+    std::string asset_label = gAssetsDir.GetLabel(asset);
+    if (asset_label.empty()) {
+        asset_label = asset.GetHex();
+    }
+    str += QString(" ") + QString::fromStdString(asset_label);
+    return str;
+}
 
 QString formatDurationStr(int secs)
 {
