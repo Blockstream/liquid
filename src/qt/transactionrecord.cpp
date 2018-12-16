@@ -105,11 +105,17 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
         {
             const CTxOut& txout = wtx.tx->vout[i];
 
-            if (wallet->IsChange(txout) || txout.scriptPubKey == CScript() /* explicit fee */) {
+            if (txout.scriptPubKey == CScript() /* explicit fee */) {
+                // Fees are handled separately below
                 continue;
             }
 
             CAsset asset = wtx.GetOutputAsset(i);
+
+            if (wallet->IsChange(txout) && !(wtx.IsCoinBase() || assets_issued_to_me_only.count(asset))) {
+                // Note: New coins need to always be entry'd, even if considered change
+                continue;
+            }
 
             if (fAllFromMe && assets_issued_to_me_only.count(asset) == 0) {
                 //
