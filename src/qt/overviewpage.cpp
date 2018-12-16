@@ -152,7 +152,7 @@ OverviewPage::~OverviewPage()
 
 void OverviewPage::updateBalance()
 {
-    const CAmount balance = walletModel->getBalance();
+    const CAmount balance = walletModel->getBalance()[Params().GetConsensus().pegged_asset];
     const CAmount unconfirmedBalance = walletModel->getUnconfirmedBalance();
     const CAmount immatureBalance = walletModel->getImmatureBalance();
     const CAmount watchOnlyBalance = walletModel->getWatchBalance();

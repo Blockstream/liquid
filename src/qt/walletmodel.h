@@ -129,7 +129,7 @@ public:
     TransactionTableModel *getTransactionTableModel();
     RecentRequestsTableModel *getRecentRequestsTableModel();
 
-    CAmount getBalance(const CCoinControl *coinControl = NULL) const;
+    CAmountMap getBalance(const CCoinControl *coinControl = NULL) const;
     CAmount getUnconfirmedBalance() const;
     CAmount getImmatureBalance() const;
     bool haveWatchOnly() const;
@@ -227,7 +227,7 @@ private:
     RecentRequestsTableModel *recentRequestsTableModel;
 
     // Cache some values to be able to detect changes
-    CAmount cachedBalance;
+    CAmountMap cachedBalance;
     CAmount cachedUnconfirmedBalance;
     CAmount cachedImmatureBalance;
     CAmount cachedWatchOnlyBalance;

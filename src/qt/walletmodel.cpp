@@ -34,7 +34,7 @@ WalletModel::WalletModel(const PlatformStyle *platformStyle, CWallet *_wallet, O
     QObject(parent), wallet(_wallet), optionsModel(_optionsModel), addressTableModel(0),
     transactionTableModel(0),
     recentRequestsTableModel(0),
-    cachedBalance(0), cachedUnconfirmedBalance(0), cachedImmatureBalance(0),
+    cachedUnconfirmedBalance(0), cachedImmatureBalance(0),
     cachedEncryptionStatus(Unencrypted),
     cachedNumBlocks(0)
 {
@@ -58,21 +58,21 @@ WalletModel::~WalletModel()
     unsubscribeFromCoreSignals();
 }
 
-CAmount WalletModel::getBalance(const CCoinControl *coinControl) const
+CAmountMap WalletModel::getBalance(const CCoinControl *coinControl) const
 {
     if (coinControl)
     {
-        CAmount nBalance = 0;
+        CAmountMap balances;
         std::vector<COutput> vCoins;
         wallet->AvailableCoins(vCoins, true, coinControl);
         BOOST_FOREACH(const COutput& out, vCoins)
             if(out.fSpendable)
-                nBalance += out.tx->GetOutputValueOut(out.i);
+                balances[out.tx->GetOutputAsset(out.i)] += out.tx->GetOutputValueOut(out.i);
 
-        return nBalance;
+        return balances;
     }
 
-    return wallet->GetBalance()[Params().GetConsensus().pegged_asset];
+    return wallet->GetBalance();
 }
 
 CAmount WalletModel::getUnconfirmedBalance() const
@@ -140,7 +140,7 @@ void WalletModel::pollBalanceChanged()
 
 void WalletModel::checkBalanceChanged()
 {
-    CAmount newBalance = getBalance();
+    CAmountMap newBalance = getBalance();
     CAmount newUnconfirmedBalance = getUnconfirmedBalance();
     CAmount newImmatureBalance = getImmatureBalance();
     CAmount newWatchOnlyBalance = 0;
@@ -263,7 +263,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
         return DuplicateAddress;
     }
 
-    CAmount nBalance = getBalance(coinControl);
+    CAmount nBalance = getBalance(coinControl)[Params().GetConsensus().pegged_asset];
 
     if(total > nBalance)
     {

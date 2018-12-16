@@ -482,7 +482,7 @@ bool SendCoinsDialog::handlePaymentRequest(const SendCoinsRecipient &rv)
 
 void SendCoinsDialog::updateBalance()
 {
-    const CAmount balance = model->getBalance();
+    const CAmount balance = model->getBalance()[Params().GetConsensus().pegged_asset];
 
     if(model && model->getOptionsModel())
     {
