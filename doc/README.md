@@ -15,12 +15,12 @@ The following are some helpful notes on how to run Bitcoin on your native platfo
 
 Unpack the files into a directory and run:
 
-- `bin/elements-qt` (GUI) or
+- `bin/liquid-qt` (GUI) or
 - `bin/liquidd` (headless)
 
 ### Windows
 
-Unpack the files into a directory, and then run elements-qt.exe.
+Unpack the files into a directory, and then run liquid-qt.exe.
 
 ### OS X
 

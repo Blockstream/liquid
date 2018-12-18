@@ -77,7 +77,7 @@ src/qt/test/moc*.cpp
 *.qm
 Makefile
 liquid-qt
-Elements-Qt.app
+Liquid-Qt.app
 
 # Unit-tests
 Makefile.test

@@ -17,7 +17,7 @@ Threat analysis
 --
 
 Gavin is a single point of failure. He could be coerced to divulge the secret signing keys,
-allowing somebody to distribute a Elements-Qt.app or elements-qt-setup.exe with a valid
+allowing somebody to distribute a Liquid-Qt.app or elements-qt-setup.exe with a valid
 signature but containing a malicious binary.
 
 Or the machine Gavin uses to sign the binaries could be compromised, either remotely or
