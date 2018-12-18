@@ -62,11 +62,11 @@
         <translation>收款位址</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <source>These are your Liquid addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation>這些是你要付款過去的 Bitcoin 位址。在付錢之前，務必要檢查金額和收款位址是否正確。</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <source>These are your Liquid addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
         <translation>這些是你用來收款的 Bitcoin 位址。建議在每次交易時，都使用一個新的收款位址。</translation>
     </message>
     <message>
@@ -338,7 +338,7 @@
         <translation>正在為磁碟裡的區塊重建索引...</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
+        <source>Send coins to a Liquid address</source>
         <translation>付錢給一個 Bitcoin 位址</translation>
     </message>
     <message>
@@ -390,11 +390,11 @@
         <translation>把錢包中的密鑰加密</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
+        <source>Sign messages with your Liquid addresses to prove you own them</source>
         <translation>用 Bitcoin 位址簽署訊息來證明位址是你的</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
+        <source>Verify messages to ensure they were signed with specified Liquid addresses</source>
         <translation>驗證訊息是用來確定訊息是用指定的 Bitcoin 位址簽署的</translation>
     </message>
     <message>
@@ -742,7 +742,7 @@
         <translation>編輯付款位址</translation>
     </message>
     <message>
-        <source>The entered address "%1" is not a valid Bitcoin address.</source>
+        <source>The entered address "%1" is not a valid Liquid address.</source>
         <translation>輸入的位址 %1 並不是有效的 Bitcoin 位址。</translation>
     </message>
     <message>
@@ -1286,7 +1286,7 @@
         <translation>無效的付款位址 %1</translation>
     </message>
     <message>
-        <source>URI cannot be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
+        <source>URI cannot be parsed! This can be caused by an invalid Liquid address or malformed URI parameters.</source>
         <translation>沒辦法解析 URI 位址！可能是因為 Bitcoin 位址無效，或是 URI 參數格式錯誤。</translation>
     </message>
     <message>
@@ -1380,7 +1380,7 @@
         <translation>金額</translation>
     </message>
     <message>
-        <source>Enter a Bitcoin address (e.g. %1)</source>
+        <source>Enter a Liquid address (e.g. %1)</source>
         <translation>輸入 Bitcoin 位址 (比如說 %1)</translation>
     </message>
     <message>
@@ -2197,7 +2197,7 @@
         <translation>只付必要的手續費 %1</translation>
     </message>
     <message>
-        <source>Warning: Invalid Bitcoin address</source>
+        <source>Warning: Invalid Liquid address</source>
         <translation>警告: Bitcoin 位址無效</translation>
     </message>
     <message>
@@ -2240,7 +2240,7 @@
         <translation>這是一筆正常的付款。</translation>
     </message>
     <message>
-        <source>The Bitcoin address to send the payment to</source>
+        <source>The Liquid address to send the payment to</source>
         <translation>接收付款的 Bitcoin 位址</translation>
     </message>
     <message>
@@ -2333,7 +2333,7 @@
         <translation>你可以用自己的位址簽署訊息或合約，來證明你可以從該位址收款。但是請小心，不要簽署語意含糊不清，或隨機產生的內容，因為釣魚式詐騙可能會用騙你簽署的手法來冒充是你。只有在語句中的細節你都同意時才簽署。</translation>
     </message>
     <message>
-        <source>The Bitcoin address to sign the message with</source>
+        <source>The Liquid address to sign the message with</source>
         <translation>用來簽署訊息的 Bitcoin 位址</translation>
     </message>
     <message>
@@ -2365,7 +2365,7 @@
         <translation>複製目前的簽章到系統剪貼簿</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this Bitcoin address</source>
+        <source>Sign the message to prove you own this Liquid address</source>
         <translation>簽署這個訊息來證明這個 Bitcoin 位址是你的</translation>
     </message>
     <message>
@@ -2389,11 +2389,11 @@
         <translation>請在下面輸入收款人的位址，訊息(請確定完整複製了所包含的換行，空格，跳位符號等等)，以及簽章，來驗證這個訊息。請小心，除了訊息內容以外，不要對簽章本身過度解讀，以避免被用「中間人攻擊法」詐騙。請注意，通過驗證的簽章只能證明簽章人確實可以從該位址收款，不能證明任何交易中的付款人身份！</translation>
     </message>
     <message>
-        <source>The Bitcoin address the message was signed with</source>
+        <source>The Liquid address the message was signed with</source>
         <translation>簽署這個訊息的 Bitcoin 位址</translation>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
+        <source>Verify the message to ensure it was signed with the specified Liquid address</source>
         <translation>驗證這個訊息來確定是用指定的 Bitcoin 位址簽署的</translation>
     </message>
     <message>
