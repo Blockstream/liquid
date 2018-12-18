@@ -14,7 +14,7 @@ def process_raw_issuance(node, issuance_list):
         raise Exception('Issuance list too long')
     # Make enough outputs for any subsequent spend
     next_destinations = {}
-    output_values = (node.getbalance()['bitcoin']-1)/5
+    output_values = round(float((node.getbalance()['bitcoin']-1)/5), 8)
     for i in range(5):
         next_destinations[node.getnewaddress()] = output_values
 
@@ -197,7 +197,7 @@ class IssuanceTest (BitcoinTestFramework):
         addr2 = txdet2[len(txdet2)-1]["address"]
         addr3 = txdet3[len(txdet3)-1]["address"]
 
-        assert_equal(len(self.nodes[0].listissuances()), 6);
+        assert_equal(len(self.nodes[0].listissuances()), 7);
         self.nodes[0].importaddress(addr1)
         self.nodes[0].importaddress(addr2)
         self.nodes[0].importaddress(addr3)
