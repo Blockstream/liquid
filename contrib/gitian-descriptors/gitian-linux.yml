@@ -113,9 +113,6 @@ script: |
   chmod +x ${WRAP_DIR}/${prog}
   done
 
-  # Disable QT build
-  export NO_QT=1
-
   cd liquid
   BASEPREFIX=`pwd`/depends
   # Build dependencies for each host
