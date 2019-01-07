@@ -75,6 +75,10 @@ private:
     AmountSpinBox *amount;
     QComboBox *unit;
 
+    bool hasAssetChoice(const CAsset&) const;
+    void addAssetChoice(const CAsset&);
+    void removeAssetChoice(const CAsset&);
+
 private Q_SLOTS:
     void unitChanged(int idx);
 
