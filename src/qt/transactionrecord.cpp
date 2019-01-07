@@ -112,12 +112,13 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
 
             CAsset asset = wtx.GetOutputAsset(i);
 
-            if (wallet->IsChange(txout) && !(wtx.IsCoinBase() || assets_issued_to_me_only.count(asset))) {
-                // Note: New coins need to always be entry'd, even if considered change
-                continue;
-            }
-
             if (fAllFromMe && assets_issued_to_me_only.count(asset) == 0) {
+                // Change is only really possible if we're the sender
+                // Otherwise, someone just sent bitcoins to a change address, which should be shown
+                if (wallet->IsChange(txout) && !assets_issued_to_me_only.count(asset)) {
+                    continue;
+                }
+
                 //
                 // Debit
                 //
