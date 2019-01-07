@@ -106,6 +106,8 @@ bool operator>=(const CAmountMap& a, const CAmountMap& b);
 bool operator==(const CAmountMap& a, const CAmountMap& b);
 bool operator!=(const CAmountMap& a, const CAmountMap& b);
 
+bool operator!(const CAmountMap& a);
+
 /** No amount larger than this (in satoshi) is valid.
  *
  * Note that this constant is *not* the total money supply, which in Bitcoin
