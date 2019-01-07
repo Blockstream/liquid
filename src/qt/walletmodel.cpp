@@ -104,6 +104,11 @@ CAmountMap WalletModel::getWatchImmatureBalance() const
     return wallet->GetImmatureWatchOnlyBalance();
 }
 
+std::set<CAsset> WalletModel::getAssetTypes() const
+{
+    return cached_asset_types;
+}
+
 void WalletModel::updateStatus()
 {
     EncryptionStatus newEncryptionStatus = getEncryptionStatus();
@@ -162,6 +167,16 @@ void WalletModel::checkBalanceChanged()
         cachedWatchUnconfBalance = newWatchUnconfBalance;
         cachedWatchImmatureBalance = newWatchImmatureBalance;
         Q_EMIT balanceChanged();
+
+        std::set<CAsset> new_asset_types;
+        for (const auto& assetamount : newBalance + newUnconfirmedBalance) {
+            if (!assetamount.second) continue;
+            new_asset_types.insert(assetamount.first);
+        }
+        if (new_asset_types != cached_asset_types) {
+            cached_asset_types = new_asset_types;
+            Q_EMIT assetTypesChanged();
+        }
     }
 }
 

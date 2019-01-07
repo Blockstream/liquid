@@ -136,6 +136,7 @@ public:
     CAmountMap getWatchBalance() const;
     CAmountMap getWatchUnconfirmedBalance() const;
     CAmountMap getWatchImmatureBalance() const;
+    std::set<CAsset> getAssetTypes() const;
     EncryptionStatus getEncryptionStatus() const;
 
     // Check address for validity
@@ -233,6 +234,7 @@ private:
     CAmountMap cachedWatchOnlyBalance;
     CAmountMap cachedWatchUnconfBalance;
     CAmountMap cachedWatchImmatureBalance;
+    std::set<CAsset> cached_asset_types;
     EncryptionStatus cachedEncryptionStatus;
     int cachedNumBlocks;
 
@@ -245,6 +247,9 @@ private:
 Q_SIGNALS:
     // Signal that balance in wallet changed
     void balanceChanged();
+
+    // Signal that the set of possessed asset types changed
+    void assetTypesChanged();
 
     // Encryption status of wallet changed
     void encryptionStatusChanged(int status);
