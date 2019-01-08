@@ -172,8 +172,8 @@ void OverviewPage::updateBalance()
 
     // only show immature (newly mined) balance if it's non-zero, so as not to complicate things
     // for the non-mining users
-    bool showImmature = !immatureBalance.empty();
-    bool showWatchOnlyImmature = !watchImmatureBalance.empty();
+    bool showImmature = !!immatureBalance;
+    bool showWatchOnlyImmature = !!watchImmatureBalance;
 
     // for symmetry reasons also show immature label when the watch-only one is shown
     ui->labelImmature->setVisible(showImmature || showWatchOnlyImmature);
