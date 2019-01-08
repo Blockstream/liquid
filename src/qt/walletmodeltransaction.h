@@ -9,7 +9,7 @@
 
 #include <QObject>
 
-class SendCoinsRecipient;
+class SendAssetsRecipient;
 
 class CReserveKey;
 class CWallet;
@@ -19,10 +19,10 @@ class CWalletTx;
 class WalletModelTransaction
 {
 public:
-    explicit WalletModelTransaction(const QList<SendCoinsRecipient> &recipients);
+    explicit WalletModelTransaction(const QList<SendAssetsRecipient> &recipients);
     ~WalletModelTransaction();
 
-    QList<SendCoinsRecipient> getRecipients();
+    QList<SendAssetsRecipient> getRecipients();
 
     CWalletTx *getTransaction();
     unsigned int getTransactionSize();
@@ -38,7 +38,7 @@ public:
     void reassignAmounts(const std::vector<CAmount>& outAmounts, int nChangePosRet); // needed for the subtract-fee-from-amount feature
 
 private:
-    QList<SendCoinsRecipient> recipients;
+    QList<SendAssetsRecipient> recipients;
     CWalletTx *walletTransaction;
     std::vector<CReserveKey> keyChange;
     CAmount fee;

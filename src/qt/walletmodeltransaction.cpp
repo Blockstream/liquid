@@ -7,7 +7,7 @@
 #include "policy/policy.h"
 #include "wallet/wallet.h"
 
-WalletModelTransaction::WalletModelTransaction(const QList<SendCoinsRecipient> &_recipients) :
+WalletModelTransaction::WalletModelTransaction(const QList<SendAssetsRecipient> &_recipients) :
     recipients(_recipients),
     walletTransaction(0),
     fee(0)
@@ -20,7 +20,7 @@ WalletModelTransaction::~WalletModelTransaction()
     delete walletTransaction;
 }
 
-QList<SendCoinsRecipient> WalletModelTransaction::getRecipients()
+QList<SendAssetsRecipient> WalletModelTransaction::getRecipients()
 {
     return recipients;
 }
@@ -48,9 +48,9 @@ void WalletModelTransaction::setTransactionFee(const CAmount& newFee)
 void WalletModelTransaction::reassignAmounts(const std::vector<CAmount>& outAmounts, int nChangePosRet)
 {
     int i = 0;
-    for (QList<SendCoinsRecipient>::iterator it = recipients.begin(); it != recipients.end(); ++it)
+    for (auto it = recipients.begin(); it != recipients.end(); ++it)
     {
-        SendCoinsRecipient& rcp = (*it);
+        auto& rcp = (*it);
 
         if (rcp.paymentRequest.IsInitialized())
         {
@@ -80,7 +80,7 @@ void WalletModelTransaction::reassignAmounts(const std::vector<CAmount>& outAmou
 CAmount WalletModelTransaction::getTotalTransactionAmount()
 {
     CAmount totalTransactionAmount = 0;
-    Q_FOREACH(const SendCoinsRecipient &rcp, recipients)
+    Q_FOREACH(const SendAssetsRecipient &rcp, recipients)
     {
         totalTransactionAmount += rcp.amount;
     }

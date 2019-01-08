@@ -160,7 +160,7 @@ bool SendCoinsEntry::validate()
     return retval;
 }
 
-SendCoinsRecipient SendCoinsEntry::getValue()
+SendAssetsRecipient SendCoinsEntry::getValue()
 {
     // Payment request
     if (recipient.paymentRequest.IsInitialized())
@@ -188,7 +188,7 @@ QWidget *SendCoinsEntry::setupTabChain(QWidget *prev)
     return ui->deleteButton;
 }
 
-void SendCoinsEntry::setValue(const SendCoinsRecipient &value)
+void SendCoinsEntry::setValue(const SendAssetsRecipient &value)
 {
     recipient = value;
 

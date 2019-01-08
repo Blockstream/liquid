@@ -31,12 +31,12 @@ public:
 
     void setModel(WalletModel *model);
     bool validate();
-    SendCoinsRecipient getValue();
+    SendAssetsRecipient getValue();
 
     /** Return whether the entry is still empty and unedited */
     bool isClear();
 
-    void setValue(const SendCoinsRecipient &value);
+    void setValue(const SendAssetsRecipient &value);
     void setAddress(const QString &address);
 
     /** Set up the tab chain manually, as Qt messes up the tab chain by default in some cases
@@ -63,7 +63,7 @@ private Q_SLOTS:
     void updateAssetTypes();
 
 private:
-    SendCoinsRecipient recipient;
+    SendAssetsRecipient recipient;
     Ui::SendCoinsEntry *ui;
     WalletModel *model;
     const PlatformStyle *platformStyle;
