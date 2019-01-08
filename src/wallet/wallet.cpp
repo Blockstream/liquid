@@ -3017,6 +3017,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                             // Reserve a new key pair from key pool
                             CPubKey vchPubKey;
                             bool ret;
+                            assert(changeCounter < vChangeKey.size());
                             ret = vChangeKey[changeCounter].GetReservedKey(vchPubKey);
                             if (!ret)
                             {
@@ -3087,6 +3088,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                         }
                     }
                     else {
+                        assert(changeCounter < vChangeKey.size());
                         vChangeKey[changeCounter].ReturnKey();
                     }
                     changeCounter++;
