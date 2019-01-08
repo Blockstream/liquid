@@ -259,11 +259,12 @@ void SendCoinsDialog::on_sendButton_clicked()
     CAmount txFee = currentTransaction.getTransactionFee();
 
     // Format confirmation message
+    int bitcoin_unit = model->getOptionsModel()->getDisplayUnit();
     QStringList formatted;
     Q_FOREACH(const SendAssetsRecipient &rcp, currentTransaction.getRecipients())
     {
         // generate bold amount string
-        QString amount = "<b>" + BitcoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), rcp.amount);
+        QString amount = "<b>" + GUIUtil::formatAssetAmount(rcp.asset, rcp.asset_amount, bitcoin_unit, BitcoinUnits::separatorStandard, true);
         amount.append("</b>");
         // generate monospace address string
         QString address = "<span style='font-family: monospace;'>" + rcp.address;
@@ -312,17 +313,22 @@ void SendCoinsDialog::on_sendButton_clicked()
 
     // add total amount in all subdivision units
     questionString.append("<hr />");
-    CAmount totalAmount = currentTransaction.getTotalTransactionAmount() + txFee;
+    CAmountMap totalAmount = currentTransaction.getTotalTransactionAmount();
+    totalAmount[Params().GetConsensus().pegged_asset] += txFee;
     QStringList alternativeUnits;
     Q_FOREACH(BitcoinUnits::Unit u, BitcoinUnits::availableUnits())
     {
         if(u != model->getOptionsModel()->getDisplayUnit())
-            alternativeUnits.append(BitcoinUnits::formatHtmlWithUnit(u, totalAmount));
+            alternativeUnits.append(BitcoinUnits::formatHtmlWithUnit(u, totalAmount[Params().GetConsensus().pegged_asset]));
     }
     questionString.append(tr("Total Amount %1")
-        .arg(BitcoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), totalAmount)));
+        .arg(BitcoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), totalAmount[Params().GetConsensus().pegged_asset])));
     questionString.append(QString("<span style='font-size:10pt;font-weight:normal;'><br />(=%2)</span>")
         .arg(alternativeUnits.join(" " + tr("or") + "<br />")));
+    totalAmount.erase(Params().GetConsensus().pegged_asset);
+    if (!!totalAmount) {
+        questionString.append(" " + tr("and") + "<br />" + GUIUtil::formatMultiAssetAmount(totalAmount, -1 /*bitcoin unit, hide*/, BitcoinUnits::separatorStandard, ";<br />"));
+    }
 
     SendConfirmationDialog confirmationDialog(tr("Confirm send coins"),
         questionString.arg(formatted.join("<br />")), SEND_CONFIRM_DELAY, this);
@@ -827,8 +833,10 @@ void SendCoinsDialog::coinControlUpdateLabels()
         SendCoinsEntry *entry = qobject_cast<SendCoinsEntry*>(ui->entries->itemAt(i)->widget());
         if(entry && !entry->isHidden())
         {
-            auto rcp = entry->getValue();
-            CoinControlDialog::payAmounts.append(rcp.amount);
+            SendAssetsRecipient rcp = entry->getValue();
+            if (rcp.asset == Params().GetConsensus().pegged_asset) {
+                CoinControlDialog::payAmounts.append(rcp.asset_amount);
+            }
             if (rcp.fSubtractFeeFromAmount)
                 CoinControlDialog::fSubtractFeeFromAmount = true;
         }

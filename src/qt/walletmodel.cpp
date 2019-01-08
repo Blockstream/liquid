@@ -33,13 +33,16 @@
 SendAssetsRecipient::SendAssetsRecipient(SendCoinsRecipient r) :
     address(r.address),
     label(r.label),
-    amount(r.amount),
+    asset(Params().GetConsensus().pegged_asset),
+    asset_amount(r.amount),
     message(r.message),
     paymentRequest(r.paymentRequest),
     authenticatedMerchant(r.authenticatedMerchant),
     fSubtractFeeFromAmount(r.fSubtractFeeFromAmount)
 {
 }
+
+#define SendCoinsRecipient SendAssetsRecipient
 
 WalletModel::WalletModel(const PlatformStyle *platformStyle, CWallet *_wallet, OptionsModel *_optionsModel, QObject *parent) :
     QObject(parent), wallet(_wallet), optionsModel(_optionsModel), addressTableModel(0),
@@ -218,9 +221,9 @@ bool WalletModel::validateAddress(const QString &address)
 
 WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransaction &transaction, const CCoinControl *coinControl)
 {
-    CAmount total = 0;
+    CAmountMap total;
     bool fSubtractFeeFromAmount = false;
-    auto recipients = transaction.getRecipients();
+    QList<SendCoinsRecipient> recipients = transaction.getRecipients();
     std::vector<CRecipient> vecSend;
 
     if(recipients.empty())
@@ -232,7 +235,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
     int nAddresses = 0;
 
     // Pre-check input data for validity
-    Q_FOREACH(const SendAssetsRecipient &rcp, recipients)
+    Q_FOREACH(const SendCoinsRecipient &rcp, recipients)
     {
         if (rcp.fSubtractFeeFromAmount)
             fSubtractFeeFromAmount = true;
@@ -256,7 +259,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
             {
                 return InvalidAmount;
             }
-            total += subtotal;
+            total[Params().GetConsensus().pegged_asset] += subtotal;
         }
         else
         {   // User-entered bitcoin address / amount:
@@ -264,7 +267,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
             {
                 return InvalidAddress;
             }
-            if(rcp.amount <= 0)
+            if(rcp.asset_amount <= 0)
             {
                 return InvalidAmount;
             }
@@ -277,10 +280,10 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
             if (addr.IsBlinded()) {
                 confidentiality_pubkey = addr.GetBlindingKey();
             }
-            CRecipient recipient = {scriptPubKey, rcp.amount, Params().GetConsensus().pegged_asset, confidentiality_pubkey, rcp.fSubtractFeeFromAmount};
+            CRecipient recipient = {scriptPubKey, rcp.asset_amount, rcp.asset, confidentiality_pubkey, rcp.fSubtractFeeFromAmount};
             vecSend.push_back(recipient);
 
-            total += rcp.amount;
+            total[rcp.asset] += rcp.asset_amount;
         }
     }
     if(setAddress.size() != nAddresses)
@@ -288,7 +291,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
         return DuplicateAddress;
     }
 
-    CAmount nBalance = getBalance(coinControl)[Params().GetConsensus().pegged_asset];
+    CAmountMap nBalance = getBalance(coinControl);
 
     if(total > nBalance)
     {
@@ -314,7 +317,8 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
 
         if(!fCreated)
         {
-            if(!fSubtractFeeFromAmount && (total + nFeeRequired) > nBalance)
+            total[Params().GetConsensus().pegged_asset] += nFeeRequired;
+            if(!fSubtractFeeFromAmount && total > nBalance)
             {
                 return SendCoinsReturn(AmountWithFeeExceedsBalance);
             }
@@ -341,7 +345,7 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
         LOCK2(cs_main, wallet->cs_wallet);
         CWalletTx *newTx = transaction.getTransaction();
 
-        Q_FOREACH(const SendAssetsRecipient &rcp, transaction.getRecipients())
+        Q_FOREACH(const SendCoinsRecipient &rcp, transaction.getRecipients())
         {
             if (rcp.paymentRequest.IsInitialized())
             {
@@ -372,7 +376,7 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
 
     // Add addresses / update labels that we've sent to to the address book,
     // and emit coinsSent signal for each recipient
-    Q_FOREACH(const SendAssetsRecipient &rcp, transaction.getRecipients())
+    Q_FOREACH(const SendCoinsRecipient &rcp, transaction.getRecipients())
     {
         // Don't touch the address book when we have a payment request
         if (!rcp.paymentRequest.IsInitialized())

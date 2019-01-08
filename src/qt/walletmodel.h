@@ -102,7 +102,8 @@ public:
 public:
     QString address;
     QString label;
-    CAmount amount;
+    CAsset asset;
+    CAmount asset_amount;
     QString message;
 
     PaymentRequestPlus paymentRequest;

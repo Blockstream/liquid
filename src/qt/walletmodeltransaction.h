@@ -30,7 +30,7 @@ public:
     void setTransactionFee(const CAmount& newFee);
     CAmount getTransactionFee();
 
-    CAmount getTotalTransactionAmount();
+    CAmountMap getTotalTransactionAmount();
 
     void newPossibleKeyChange(CWallet *wallet);
     std::vector<CReserveKey> *getPossibleKeyChange();

@@ -7,7 +7,9 @@
 #include "policy/policy.h"
 #include "wallet/wallet.h"
 
-WalletModelTransaction::WalletModelTransaction(const QList<SendAssetsRecipient> &_recipients) :
+#define SendCoinsRecipient SendAssetsRecipient
+
+WalletModelTransaction::WalletModelTransaction(const QList<SendCoinsRecipient> &_recipients) :
     recipients(_recipients),
     walletTransaction(0),
     fee(0)
@@ -20,7 +22,7 @@ WalletModelTransaction::~WalletModelTransaction()
     delete walletTransaction;
 }
 
-QList<SendAssetsRecipient> WalletModelTransaction::getRecipients()
+QList<SendCoinsRecipient> WalletModelTransaction::getRecipients()
 {
     return recipients;
 }
@@ -48,9 +50,9 @@ void WalletModelTransaction::setTransactionFee(const CAmount& newFee)
 void WalletModelTransaction::reassignAmounts(const std::vector<CAmount>& outAmounts, int nChangePosRet)
 {
     int i = 0;
-    for (auto it = recipients.begin(); it != recipients.end(); ++it)
+    for (QList<SendCoinsRecipient>::iterator it = recipients.begin(); it != recipients.end(); ++it)
     {
-        auto& rcp = (*it);
+        SendCoinsRecipient& rcp = (*it);
 
         if (rcp.paymentRequest.IsInitialized())
         {
@@ -65,31 +67,41 @@ void WalletModelTransaction::reassignAmounts(const std::vector<CAmount>& outAmou
                 subtotal += outAmounts[i];
                 i++;
             }
-            rcp.amount = subtotal;
+            rcp.asset_amount = subtotal;
         }
         else // normal recipient (no payment request)
         {
             if (i == nChangePosRet)
                 i++;
-            rcp.amount = outAmounts[i];
+            rcp.asset_amount = outAmounts[i];
             i++;
         }
     }
 }
 
-CAmount WalletModelTransaction::getTotalTransactionAmount()
+CAmountMap WalletModelTransaction::getTotalTransactionAmount()
 {
-    CAmount totalTransactionAmount = 0;
-    Q_FOREACH(const SendAssetsRecipient &rcp, recipients)
+    CAmountMap totalTransactionAmount;
+    Q_FOREACH(const SendCoinsRecipient &rcp, recipients)
     {
-        totalTransactionAmount += rcp.amount;
+        totalTransactionAmount[rcp.asset] += rcp.asset_amount;
     }
     return totalTransactionAmount;
 }
 
 void WalletModelTransaction::newPossibleKeyChange(CWallet *wallet)
 {
-    keyChange.emplace_back(wallet);
+    // Add a reserve key for each asset type being sent
+    std::set<CAsset> assets_seen;
+    Q_FOREACH(const SendCoinsRecipient &rcp, recipients) {
+        if (assets_seen.insert(rcp.asset).second) {
+            keyChange.emplace_back(wallet);
+        }
+    }
+    if (!assets_seen.count(Params().GetConsensus().pegged_asset)) {
+        // ...plus one extra for fees
+        keyChange.emplace_back(wallet);
+    }
 }
 
 std::vector<CReserveKey> *WalletModelTransaction::getPossibleKeyChange()
