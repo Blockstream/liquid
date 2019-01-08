@@ -33,14 +33,14 @@ public:
     CAmount getTotalTransactionAmount();
 
     void newPossibleKeyChange(CWallet *wallet);
-    CReserveKey *getPossibleKeyChange();
+    std::vector<CReserveKey> *getPossibleKeyChange();
 
     void reassignAmounts(const std::vector<CAmount>& outAmounts, int nChangePosRet); // needed for the subtract-fee-from-amount feature
 
 private:
     QList<SendCoinsRecipient> recipients;
     CWalletTx *walletTransaction;
-    CReserveKey *keyChange;
+    std::vector<CReserveKey> keyChange;
     CAmount fee;
 };
 
