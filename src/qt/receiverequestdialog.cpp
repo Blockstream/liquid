@@ -179,16 +179,24 @@ void ReceiveRequestDialog::update()
             }
             QRcode_free(code);
 
-            QImage qrAddrImage = QImage(QR_IMAGE_SIZE, QR_IMAGE_SIZE+20, QImage::Format_RGB32);
+            QFont font = GUIUtil::fixedPitchFont();
+            font.setPixelSize(12);
+            QFontMetrics fm(font);
+            const int lines = (fm.width(info.address) / QR_IMAGE_SIZE) + 1;
+            QString split_address = info.address;
+            const int chars_per_line = (info.address.length() + lines - 1) / lines;
+            for (int i = 0; i < lines; ++i) {
+                split_address.insert((chars_per_line * i) + i, '\n');
+            }
+
+            QImage qrAddrImage = QImage(QR_IMAGE_SIZE, QR_IMAGE_SIZE + 16 + fm.height(), QImage::Format_RGB32);
             qrAddrImage.fill(0xffffff);
             QPainter painter(&qrAddrImage);
             painter.drawImage(0, 0, qrImage.scaled(QR_IMAGE_SIZE, QR_IMAGE_SIZE));
-            QFont font = GUIUtil::fixedPitchFont();
-            font.setPixelSize(12);
             painter.setFont(font);
             QRect paddedRect = qrAddrImage.rect();
-            paddedRect.setHeight(QR_IMAGE_SIZE+12);
-            painter.drawText(paddedRect, Qt::AlignBottom|Qt::AlignCenter, info.address);
+            paddedRect.setHeight(QR_IMAGE_SIZE + 8 + fm.height());
+            painter.drawText(paddedRect, Qt::AlignBottom | Qt::AlignCenter | Qt::TextWordWrap, split_address);
             painter.end();
 
             ui->lblQRCode->setPixmap(QPixmap::fromImage(qrAddrImage));
