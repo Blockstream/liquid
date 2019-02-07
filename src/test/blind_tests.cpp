@@ -138,7 +138,10 @@ BOOST_AUTO_TEST_CASE(naive_blinding_test)
         BOOST_CHECK(BlindTransaction(input_blinds, input_asset_blinds, input_assets, input_amounts, output_blinds, output_asset_blinds, output_pubkeys, vDummy, vDummy, tx3) == 2);
         BOOST_CHECK(!tx3.vout[0].nValue.IsExplicit());
         BOOST_CHECK(!tx3.vout[2].nValue.IsExplicit());
-        BOOST_CHECK(VerifyAmounts(cache, tx3));
+        // Store the results, copy the surjection proof check for cache validity
+        BOOST_CHECK(VerifyAmounts(cache, tx3, nullptr, true));
+        tx3.wit.vtxoutwit[0].vchSurjectionproof = tx3.wit.vtxoutwit[2].vchSurjectionproof;
+        BOOST_CHECK(!VerifyAmounts(cache, tx3, nullptr, true));
 
         CAmount unblinded_amount;
         BOOST_CHECK(UnblindConfidentialPair(key2, tx3.vout[0].nValue, tx3.vout[0].nAsset, tx3.vout[0].nNonce, scriptCommit, tx3.wit.vtxoutwit[0].vchRangeproof, unblinded_amount, blind3, unblinded_id, asset_blind) == 0);

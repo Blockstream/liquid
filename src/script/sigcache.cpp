@@ -190,9 +190,9 @@ bool CachingSurjectionProofChecker::VerifySurjectionProof(secp256k1_surjectionpr
 {
     // Serialize objects
     std::vector<unsigned char> vchproof;
-    size_t proof_len = 0;
-    vchproof.resize(secp256k1_surjectionproof_serialized_size(secp256k1_ctx_verify_amounts, &proof));
-    secp256k1_surjectionproof_serialize(secp256k1_ctx_verify_amounts, &vchproof[0], &proof_len, &proof);
+    size_t proof_len = secp256k1_surjectionproof_serialized_size(secp256k1_ctx_verify_amounts, &proof);
+    vchproof.resize(proof_len);
+    assert(secp256k1_surjectionproof_serialize(secp256k1_ctx_verify_amounts, &vchproof[0], &proof_len, &proof) == 1);
 
     // libsecp API only supports up to 256 indices for surjection, so we truncate
     // commitment list to that size. Assets must be proven against the first 256 inputs.
@@ -202,7 +202,7 @@ bool CachingSurjectionProofChecker::VerifySurjectionProof(secp256k1_surjectionpr
     tagCommit.resize(33);
     CSHA256 sha2;
     for (unsigned int i = 0; i < surjection_size; i++) {
-        secp256k1_generator_serialize(secp256k1_ctx_verify_amounts, tagCommit.data(), &vTags[i]);
+        assert(secp256k1_generator_serialize(secp256k1_ctx_verify_amounts, tagCommit.data(), &vTags[i]) == 1);
         sha2.Write(tagCommit.data(), tagCommit.size());
     }
     tagCommit.resize(32);
@@ -210,7 +210,7 @@ bool CachingSurjectionProofChecker::VerifySurjectionProof(secp256k1_surjectionpr
 
     std::vector<unsigned char> vchGen;
     vchGen.resize(CConfidentialValue::nCommittedSize);
-    secp256k1_generator_serialize(secp256k1_ctx_verify_amounts, &vchGen[0], &gen);
+    assert(secp256k1_generator_serialize(secp256k1_ctx_verify_amounts, &vchGen[0], &gen) == 1);
 
     CPubKey pubkey(vchGen);
     uint256 entry;
