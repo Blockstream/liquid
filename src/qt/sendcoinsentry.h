@@ -55,6 +55,7 @@ Q_SIGNALS:
     void subtractFeeFromAmountChanged();
 
 private Q_SLOTS:
+    void payAmountChangedInternal();
     void deleteClicked();
     void on_payTo_textChanged(const QString &address);
     void on_addressBookButton_clicked();

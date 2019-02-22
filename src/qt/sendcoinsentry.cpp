@@ -44,6 +44,7 @@ SendCoinsEntry::SendCoinsEntry(const PlatformStyle *_platformStyle, QWidget *par
 
     // Connect signals
     connect(ui->payAmount, SIGNAL(valueChanged()), this, SIGNAL(payAmountChanged()));
+    connect(ui->payAmount, SIGNAL(valueChanged()), this, SLOT(payAmountChangedInternal()));
     connect(ui->checkboxSubtractFeeFromAmount, SIGNAL(toggled(bool)), this, SIGNAL(subtractFeeFromAmountChanged()));
     connect(ui->deleteButton, SIGNAL(clicked()), this, SLOT(deleteClicked()));
     connect(ui->deleteButton_is, SIGNAL(clicked()), this, SLOT(deleteClicked()));
@@ -114,6 +115,17 @@ void SendCoinsEntry::clear()
     // update the display unit, to not use the default ("BTC")
     updateAssetTypes();
     updateDisplayUnit();
+}
+
+void SendCoinsEntry::payAmountChangedInternal()
+{
+    const auto send_assets = ui->payAmount->fullValue();
+    if (send_assets.first == Params().GetConsensus().pegged_asset) {
+        ui->checkboxSubtractFeeFromAmount->setEnabled(true);
+    } else {
+        ui->checkboxSubtractFeeFromAmount->setCheckState(Qt::Unchecked);
+        ui->checkboxSubtractFeeFromAmount->setEnabled(false);
+    }
 }
 
 void SendCoinsEntry::deleteClicked()
