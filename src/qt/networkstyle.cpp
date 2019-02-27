@@ -19,6 +19,7 @@ static const struct {
     const char *titleAddText;
 } network_styles[] = {
     {CHAINPARAMS_OLD_MAIN, QAPP_APP_NAME_DEFAULT, 0, 0},
+    {CHAINPARAMS_LIQUIDV1, "Liquid-Qt-liquidv1", 0, 0},
     {CHAINPARAMS_REGTEST, QAPP_APP_NAME_TESTNET, 160, 30}
 };
 static const unsigned network_styles_count = sizeof(network_styles)/sizeof(*network_styles);
